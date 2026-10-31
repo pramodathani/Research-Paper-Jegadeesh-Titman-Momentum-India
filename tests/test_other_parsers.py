@@ -75,6 +75,27 @@ class TestFnoBhavcopyParser:
         assert list(table['symbol']) == ['ACC']
         assert table['close'].iloc[0] == 3
 
+    def test_two_digit_year_dates(self) -> None:
+        """Dates such as 14-May-12 are read as 2012.
+
+        Returns:
+            None.
+        """
+        raw = pd.DataFrame(
+            {
+                'INSTRUMENT': ['FUTSTK'],
+                'SYMBOL': ['ACC'],
+                'EXPIRY_DT': ['31-May-12'],
+                'CLOSE': ['1'],
+                'SETTLE_PR': ['1'],
+                'OPEN_INT': ['1'],
+                'TIMESTAMP': ['14-May-12'],
+            }
+        )
+        table = FnoBhavcopyParser().parse_table(raw)
+        assert str(table['date'].iloc[0].date()) == '2012-05-14'
+        assert str(table['expiry'].iloc[0].date()) == '2012-05-31'
+
 
 class TestCorporateActionsParser:
     """Tests of CorporateActionsParser."""
