@@ -136,7 +136,9 @@ src/jegadeesh_titman_momentum_india/
   data/       downloaders and parsers, one class per source
   momentum/   returns, rankings, portfolios and statistics
   site/       the interactive companion page
+  momentum/brief_page.py  builds the hand-off brief's web page
   scripts/    one command-line program per step
+handoff/      the package for trading-agent: strategy skill, brief, monthly target script
 tests/        unit tests on small made-up data, no network
 results/      tables, charts and summary
 data/         raw and intermediate data, git-ignored

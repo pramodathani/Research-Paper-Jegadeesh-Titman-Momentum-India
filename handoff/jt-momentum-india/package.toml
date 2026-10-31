@@ -1,0 +1,4 @@
+[package]
+name = "jt-momentum-india"
+description = "Long-only 6-month price momentum in India's 500 most traded NSE shares, held in six overlapping monthly cohorts; from the Jegadeesh and Titman (1993) study recreated on NSE data"
+version = "2026.10.31"

@@ -39,6 +39,9 @@ live = [
 charts = [
     "matplotlib",
 ]
+handoff = [
+    "markdown",
+]
 database = [
     "psycopg[binary]",
     "sqlalchemy",
