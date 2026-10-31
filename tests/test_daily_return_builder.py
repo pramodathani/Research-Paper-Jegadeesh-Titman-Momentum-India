@@ -178,3 +178,75 @@ class TestDailyReturnBuilder:
         returns, flags = DailyReturnBuilder().build(prices, make_actions([]))
         assert returns['ret'].iloc[0] == pytest.approx(1.0)
         assert flags.empty
+
+    def test_crash_that_rebounds_is_not_a_split(self) -> None:
+        """A near-halving followed by a 38% rebound is a real loss.
+
+        Returns:
+            None.
+        """
+        prices = make_prices(
+            [
+                ('2008-10-23', 'UNI', 'EQ', None, 61.6, 60.0),
+                ('2008-10-24', 'UNI', 'EQ', None, 31.0, 61.6),
+                ('2008-10-27', 'UNI', 'EQ', None, 42.7, 31.0),
+            ]
+        )
+        returns, flags = DailyReturnBuilder().build(prices, make_actions([]))
+        crash = returns[returns['date'] == '2008-10-24']['ret'].iloc[0]
+        assert crash == pytest.approx(31.0 / 61.6 - 1.0)
+        assert flags.empty
+
+    def test_lasting_fall_beyond_limit_is_kept(self) -> None:
+        """A 56% fall that does not come back is kept as a real loss.
+
+        Returns:
+            None.
+        """
+        prices = make_prices(
+            [
+                ('2020-03-05', 'YES', 'EQ', None, 37.0, 37.0),
+                ('2020-03-06', 'YES', 'EQ', None, 16.3, 37.0),
+                ('2020-03-09', 'YES', 'EQ', None, 21.5, 16.3),
+            ]
+        )
+        returns, flags = DailyReturnBuilder().build(prices, make_actions([]))
+        crash = returns[returns['date'] == '2020-03-06']['ret'].iloc[0]
+        assert crash == pytest.approx(16.3 / 37.0 - 1.0)
+        assert list(flags['kind']) == ['kept_real_fall']
+
+    def test_one_day_misprint_is_zeroed(self) -> None:
+        """A 60% fall undone the next day is a misprint; both days are zeroed.
+
+        Returns:
+            None.
+        """
+        prices = make_prices(
+            [
+                ('2015-01-05', 'BAD', 'EQ', None, 100.0, 100.0),
+                ('2015-01-06', 'BAD', 'EQ', None, 40.0, 100.0),
+                ('2015-01-07', 'BAD', 'EQ', None, 99.0, 40.0),
+            ]
+        )
+        returns, flags = DailyReturnBuilder().build(prices, make_actions([]))
+        day = returns[returns['date'] == '2015-01-06']['ret'].iloc[0]
+        assert day == 0.0
+        assert list(flags['kind']) == ['zeroed_misprint', 'zeroed']
+        assert returns['ret'].iloc[2] == 0.0
+
+    def test_wrong_previous_close_is_repaired(self) -> None:
+        """A tiny previous close in the file is replaced by the prior close.
+
+        Returns:
+            None.
+        """
+        prices = make_prices(
+            [
+                ('2026-04-17', 'HAWK', 'EQ', None, 500.0, 495.0),
+                ('2026-04-20', 'HAWK', 'EQ', None, 510.0, 1.3),
+            ]
+        )
+        returns, flags = DailyReturnBuilder().build(prices, make_actions([]))
+        day = returns[returns['date'] == '2026-04-20']['ret'].iloc[0]
+        assert day == pytest.approx(0.02)
+        assert list(flags['kind']) == ['previous_close_repaired']
