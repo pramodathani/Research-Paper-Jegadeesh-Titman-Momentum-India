@@ -116,7 +116,7 @@ C and D for J = 12, K = 3 earn 1.38% (t 3.21) and 0.68% (t 1.18) after costs. Al
 ## What was tried
 
 The core grid has 192 series: 2 universes × 2 skip settings × 4 J × 4 K × 3 legs (winners, losers, long-short), of which 64 are long-short. The robustness checks add about 130 series on 4 J and K pairs, and portfolios C and D add 16. The 6/6 strategy was chosen as the lead before any results were seen, because it is the paper's own (plan, section 9).
-- 49 of the 64 long-short cells have a gross Newey-West t above 3.16, the Bonferroni cut-off for 64 two-sided tests. That count comes from the reviewer's check, before the final fixes.
+- 42 of the 64 long-short cells have a gross Newey-West t above 3.16, the Bonferroni cut-off for 64 two-sided tests, and 20 do after costs (the reviewer counted 49 before the final fixes).
 - The best cells (12/3, 9/3) should be read with suspicion. We report 6/6 instead.
 
 ## Review

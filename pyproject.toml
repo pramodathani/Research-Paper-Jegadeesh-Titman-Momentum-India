@@ -46,6 +46,9 @@ database = [
     "chromadb",
 ]
 
+[project.scripts]
+jt-momentum-app = "jegadeesh_titman_momentum_india.site_server:SiteServerApplication.main"
+
 [tool.hatch.build.targets.wheel]
 packages = [
     "src/jegadeesh_titman_momentum_india",
