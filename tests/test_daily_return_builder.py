@@ -167,3 +167,14 @@ class TestDailyReturnBuilder:
         prices = make_prices([('2010-01-04', 'AAA', 'EQ', None, 10.0, 0.0)])
         returns, _ = DailyReturnBuilder().build(prices, make_actions([]))
         assert pd.isna(returns['ret'].iloc[0])
+
+    def test_penny_stock_tick_jump_is_not_a_split(self) -> None:
+        """A real doubling of a share priced under 5 is kept.
+
+        Returns:
+            None.
+        """
+        prices = make_prices([('2010-01-05', 'AAA', 'EQ', None, 0.2, 0.1)])
+        returns, flags = DailyReturnBuilder().build(prices, make_actions([]))
+        assert returns['ret'].iloc[0] == pytest.approx(1.0)
+        assert flags.empty

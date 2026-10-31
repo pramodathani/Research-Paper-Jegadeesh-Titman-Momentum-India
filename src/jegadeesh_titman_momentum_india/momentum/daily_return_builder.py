@@ -28,6 +28,8 @@ class DailyReturnBuilder:
         upper_limit: The highest believable one-day adjusted return.
         ratios: The price ratios of common splits, bonuses and consolidations.
         ratio_tolerance: How close a move must be to a ratio to be matched.
+        minimum_price_for_inference: Lowest previous close for which a missed
+            action is inferred.
     """
 
     SERIES_PRIORITY: ClassVar[dict[str, int]] = {
@@ -41,6 +43,7 @@ class DailyReturnBuilder:
         lower_limit: float = -0.5,
         upper_limit: float = 1.0,
         ratio_tolerance: float = 0.05,
+        minimum_price_for_inference: float = 5.0,
     ) -> None:
         """Sets the limits.
 
@@ -48,6 +51,8 @@ class DailyReturnBuilder:
             lower_limit (float): Lowest believable daily return.
             upper_limit (float): Highest believable daily return.
             ratio_tolerance (float): How close to a ratio counts as a match.
+            minimum_price_for_inference (float): Moves of shares priced below
+                this are real tick-size jumps, so no action is inferred.
 
         Returns:
             None.
@@ -55,6 +60,7 @@ class DailyReturnBuilder:
         self.lower_limit = lower_limit
         self.upper_limit = upper_limit
         self.ratio_tolerance = ratio_tolerance
+        self.minimum_price_for_inference = minimum_price_for_inference
         self.ratios = np.array(
             [
                 0.5,
@@ -238,6 +244,7 @@ class DailyReturnBuilder:
         """
         unexplained = (
             (table['factor'] == 1.0)
+            & (table['previous_close'] >= self.minimum_price_for_inference)
             & table['ret'].notna()
             & ((table['ret'] < -0.38) | (table['ret'] > 0.6))
         )
