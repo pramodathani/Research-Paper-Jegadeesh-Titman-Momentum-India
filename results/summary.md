@@ -46,9 +46,9 @@ All numbers come from the code in this repository, run on 31 October 2026. Retur
 | Buy − sell | 0.95% (plain t 3.07) | 1.64% (t 3.92) / 1.36% (t 3.26) | 1.42% (t 3.41) / 1.28% (t 3.07) | 0.99% (t 2.21) / 0.85% (t 1.90) |
 | Worst drawdown of buy − sell, net | not reported | −62% | −69% | |
 | Months | 300 | 262 | 262 | 262 |
-| Turnover, each leg, a month | about 14% (84.8% over six months, p. 77) | 32% | 32% | |
+| Turnover, each leg, one-way, a month | about 14% (84.8% over six months, p. 77) | 16% (0.32 bought plus sold) | 16% (0.32) | |
 
-Monthly turnover per leg is about twice the paper's, because Indian decile membership changes faster. Costs take 0.14% a month from the top-500 long-short and 0.28% from all shares.
+Monthly turnover per leg, counted one way, is a little above the paper's (16% against 14%), because Indian decile membership changes slightly faster. The engine reports bought plus sold, which is why its figure is 0.32. Costs take 0.14% a month from the top-500 long-short and 0.28% from all shares.
 
 The full grid, both panels and both universes, is in `summary_tables.md`. As in the paper:
 - J = 6 to 12 with short holding periods does best. The highest after-cost cells are 12/3 in all shares (1.61%) and 9/3 and 12/3 in the top 500 (1.55% and 1.58%).
