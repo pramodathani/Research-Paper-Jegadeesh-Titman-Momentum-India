@@ -114,7 +114,7 @@ class BhavcopyParser:
             table['date'] = pd.to_datetime(table['date'], format='%Y-%m-%d')
         else:
             table = raw.rename(columns=self.OLD_RENAMES)
-            table['date'] = pd.to_datetime(table['date'], format='%d-%b-%Y')
+            table['date'] = self._parse_old_dates(table['date'])
         if 'isin' not in table.columns:
             table['isin'] = None
         table['symbol'] = table['symbol'].str.strip()
@@ -131,3 +131,16 @@ class BhavcopyParser:
         ):
             table[column] = pd.to_numeric(table[column], errors='coerce')
         return table[list(self.COLUMNS)].reset_index(drop=True)
+
+    def _parse_old_dates(self, dates: pd.Series) -> pd.Series:
+        """Parses old-format dates, which NSE prints with 2 or 4 year digits.
+
+        Args:
+            dates (pd.Series): Strings such as 05-JUL-2024 or 13-Jul-20.
+
+        Returns:
+            pd.Series: The dates.
+        """
+        four_digit = pd.to_datetime(dates, format='%d-%b-%Y', errors='coerce')
+        two_digit = pd.to_datetime(dates, format='%d-%b-%y', errors='coerce')
+        return four_digit.fillna(two_digit)

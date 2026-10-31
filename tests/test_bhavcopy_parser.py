@@ -63,3 +63,13 @@ class TestBhavcopyParser:
         assert list(table['symbol']) == ['AAA']
         assert table['isin'].iloc[0] == 'INE000A01010'
         assert table['traded_value'].iloc[0] == 5250
+
+    def test_two_digit_year_dates(self) -> None:
+        """A date printed as 13-Jul-20 is read as 13 July 2020.
+
+        Returns:
+            None.
+        """
+        text = OLD_FILE.replace('2-JAN-1996', '13-Jul-20')
+        table = BhavcopyParser().parse_bytes(self._zip(text))
+        assert str(table['date'].iloc[0].date()) == '2020-07-13'
