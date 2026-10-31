@@ -69,6 +69,9 @@ class TestEndToEnd:
         )
         assert flags.empty
         runner = StudyRunner(returns)
+        top_200 = runner.universes['U3']
+        assert not (top_200 & ~runner.universes['U2']).any().any()
+        assert (top_200.sum(axis=1) <= 200).all()
         grid = runner.grid(
             formation_choices=(3, 6),
             holding_choices=(3, 6),

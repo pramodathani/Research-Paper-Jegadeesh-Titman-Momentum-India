@@ -340,6 +340,20 @@ class MakeResultsApplication:
         result['check'] = 'brokerage 0.03% per side'
         frames.append(result)
         runner.brokerage = 0.0
+        result = runner.grid(universes=('U3',), **choices)
+        result = result[~result['skip']].copy()
+        result['check'] = 'top 200 universe'
+        frames.append(result)
+        runner.impact_costs['U1'] = 0.006
+        result = runner.grid(universes=('U1',), **choices)
+        result = result[~result['skip']].copy()
+        result['check'] = 'all shares at 0.6% impact per side'
+        frames.append(result)
+        runner.impact_costs['U1'] = runner.UNIVERSE_IMPACT['U1']
+        borrow = base[base['leg'] == 'long_short'].copy()
+        borrow['net'] = borrow['net'] - 0.03 / 12.0
+        borrow['check'] = 'short borrow fee 3% a year'
+        frames.append(borrow)
         delayed = StudyRunner(daily, delay_days=1)
         result = delayed.grid(**choices)
         result = result[~result['skip']].copy()
@@ -398,7 +412,9 @@ class MakeResultsApplication:
         text = (
             f'Core grid: {count} series (2 universes x 2 skip settings x 4 J '
             f'x 4 K x 3 legs). Robustness: 2 delisting stresses + brokerage '
-            f'+ one-day delay on 4 J/K pairs x 2 universes x 3 legs = 96. '
+            f'+ one-day delay on 4 J/K pairs x 2 universes x 3 legs = 96; '
+            f'top-200 universe, all shares at double impact and a short '
+            f'borrow fee add 12 + 12 + 8 = 32. '
             f'Portfolios C and D: 4 J/K pairs each, 2 portfolios = 8. '
             f'Table II, III, VII and benchmark comparisons reuse the '
             f'6/6 strategy.\n'

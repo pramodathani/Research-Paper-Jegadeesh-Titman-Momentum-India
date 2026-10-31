@@ -35,9 +35,11 @@ class StudyRunner:
         matrices: The wide price tables.
         monthly_returns: Holding returns by month and share.
         formation_dates: The last trading day of each month.
-        universes: The bool tables for each universe name.
+        universes: The bool tables for each universe name: U1 all shares, U2
+            the top 500 by traded value and U3 the top 200.
         liquidity: Median daily traded value before each formation date.
-        impact_costs: Market impact per side for each universe name.
+        impact_costs: Market impact per side for each universe name, which a
+            robustness check may change.
         skip_days: Trading days of the gap in the skip variant.
         brokerage: Brokerage per side as a fraction of value.
     """
@@ -45,6 +47,7 @@ class StudyRunner:
     UNIVERSE_IMPACT: ClassVar[dict[str, float]] = {
         'U1': 0.003,
         'U2': 0.001,
+        'U3': 0.001,
     }
 
     def __init__(
@@ -82,10 +85,14 @@ class StudyRunner:
         self.liquidity.index = self.months
         u1.index = self.months
         u2.index = self.months
+        ranked = self.liquidity.where(u2).rank(axis=1, ascending=False)
+        u3 = ranked <= 200
         self.universes = {
             'U1': u1,
             'U2': u2,
+            'U3': u3,
         }
+        self.impact_costs = dict(self.UNIVERSE_IMPACT)
         self.monthly_returns = self.monthly_returns.reindex(
             index=self.months,
             columns=self.matrices.returns.columns,
@@ -136,7 +143,7 @@ class StudyRunner:
             DeliveryCosts: Indian delivery costs with the universe's impact.
         """
         return DeliveryCosts(
-            impact_cost=self.UNIVERSE_IMPACT[universe],
+            impact_cost=self.impact_costs[universe],
             brokerage=self.brokerage,
         )
 
