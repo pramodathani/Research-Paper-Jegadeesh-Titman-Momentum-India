@@ -1,0 +1,13 @@
+sample,months,theta,t,universe,series
+whole sample,252,-0.8361923824521916,-1.9662888887219179,U1,weighted relative strength strategy
+first half,126,-0.9542297965046032,-2.1092282813999215,U1,weighted relative strength strategy
+second half,126,-0.46036437217814485,-0.7430147515967843,U1,weighted relative strength strategy
+whole sample,252,-1.1382090727174035,-1.8867447803172321,U1,decile winners minus losers
+first half,126,-1.2213925226195181,-1.9467471403428,U1,decile winners minus losers
+second half,126,-0.9045190127897262,-1.0376638231441933,U1,decile winners minus losers
+whole sample,252,-0.9064567102278668,-1.6533180884283751,U2,weighted relative strength strategy
+first half,126,-0.9453012927459024,-1.6600683867619799,U2,weighted relative strength strategy
+second half,126,-0.37584653988449856,-0.5513036728956303,U2,weighted relative strength strategy
+whole sample,252,-1.0552502491101292,-1.5671102644266808,U2,decile winners minus losers
+first half,126,-1.0891284485858683,-1.5683668734518539,U2,decile winners minus losers
+second half,126,-1.069219674982949,-1.024816683954571,U2,decile winners minus losers

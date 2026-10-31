@@ -151,3 +151,30 @@ The backtest_reviewer subagent checked the backtest on 31 October 2026 (`review/
 - **Short leg:** shorts pay delivery costs and, in the base case, no borrowing fee.
 - **Portfolio D:** ignores the futures basis and the cost of carry.
 - **Data before 2006:** less reliable, as described above.
+
+## Further tests from the paper (results/further/)
+
+All numbers come from `scripts/make_further_results.py`. U1 = all shares, U2 = top 500 by liquidity. Not yet reviewed by backtest_reviewer and not yet on the companion page.
+
+**January reversal (footnote 15 idea: do the opposite in January).** In India momentum does not lose in January, so flipping the spread in January cuts the return rather than adding to it.
+
+| Universe, J/K | Normal mean/month | Reversed mean/month | Normal compound a year | Reversed compound a year | Januaries reversal loses / gains (of 22) | t of the reversal's January return |
+|---|---|---|---|---|---|---|
+| U1 6/6 | 1.64% | 1.36% | 18.5% | 14.6% | 16 / 6 | -1.47 |
+| U1 12/3 | 1.90% | 1.63% | 20.3% | 16.4% | 15 / 7 | -1.13 |
+| U2 6/6 | 1.42% | 0.97% | 15.2% | 9.2% | 18 / 4 | -1.93 |
+| U2 12/3 | 1.74% | 1.21% | 17.0% | 9.8% | 17 / 5 | -1.78 |
+
+The reversal still has a positive overall return only because the other 11 months carry it. The average January momentum spread is +1.6% to +3.2%, so reversing it gives up that amount. The result is not significant at 5% (t between -1.1 and -1.9), and the worst January for the reversal is 2012 for U1 (momentum was -15% that January and the reversal made +15%). By-year figures: `january_reversal_by_year.csv`.
+
+**Section III, profit sources.** Weighted relative strength (WRSS) averages 6.8% a month in U1 (NW t 3.34) and 6.1% in U2 (t 2.85); correlation with the decile spread is 0.93 (U1) and 0.97 (U2), against 0.95 in the paper. Lead-lag coefficient theta: -0.84 (t -1.97) for U1 whole sample, halves -0.95 and -0.46; the paper has -2.29 (t -1.74). The sign matches the paper. The U1 decomposition is dominated by noise from tiny shares (beta variance 8.5), so rely on U2 (dispersion +0.0050, factor 0.00002, idiosyncratic 0.0021).
+
+**Tables III and IV joint tests.** Equal decile returns are rejected for all groups (F 4.5, p 1.5e-5) and zero alphas too (F 5.1, p 1e-6). The size split: the F-test for equal returns across deciles rejects for small and mid shares (p 0.01 and 0.004) but not for the largest third (p 0.16).
+
+**Buy-and-hold vs monthly rebalanced.** Buy-and-hold deciles earn slightly more in every cell (e.g. U1 6/6 1.79% vs 1.64% a month, NW t 4.32).
+
+**Flat 0.5% one-way cost test (paper: 9.29% a year).** U1 6/6 after 0.5% one-way: 1.30% a month, alpha 18.2% a year (t 4.01). U2 6/6: 1.09% a month, alpha 16.6% (t 3.58). Momentum survives the paper's flat charge across all 32 cells (alpha t 1.6 to 4.0).
+
+**Alphas against an equally weighted market.** Long-short alpha 1.99% a month (t 5.88) U1, 1.81% (t 5.21) U2; the loser leg's alpha is -1.27% (t -6.41) against the equally weighted market, so most of India's momentum profit comes from the short side, which the long-only portfolio cannot capture.
+
+Also written: Table IV and VI by size (`table4_by_size.csv`, `table6_by_size.csv`), event-time betas (`table7_betas_*.csv`) and the 1997 to 2004 event-time extension (`table7_extension_1997_2004_*.csv`).
