@@ -1,0 +1,12 @@
+/data/*
+!/data/README.md
+/pdf/
+/paper/*.pdf
+.env
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+/build/
+/dist/

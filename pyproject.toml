@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jegadeesh-titman-momentum-india"
+version = "2026.10.31"
+description = "Jegadeesh and Titman (1993) momentum strategies recreated for Indian shares listed on NSE"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Pramod Athani", email = "pramod.athani@gmail.com" },
+]
+requires-python = ">=3.14"
+keywords = [
+    "momentum",
+    "relative strength",
+    "Jegadeesh Titman",
+    "NSE",
+    "India",
+    "replication",
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyarrow",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "ruff",
+]
+live = [
+    "tradingmachine",
+]
+database = [
+    "psycopg[binary]",
+    "sqlalchemy",
+    "pymongo",
+    "chromadb",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/jegadeesh_titman_momentum_india",
+]
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.format]
+quote-style = "single"
