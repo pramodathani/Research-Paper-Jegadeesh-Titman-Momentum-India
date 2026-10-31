@@ -139,3 +139,27 @@ class TestEventTimeReturns:
         )
         assert table.loc[1, 'monthly'] == pytest.approx(0.03)
         assert table.loc[3, 'cumulative'] == pytest.approx(0.09)
+
+
+class TestEventTimeBetas:
+    """Tests of the event-time beta."""
+
+    def test_spread_with_half_the_market_has_beta_half(self) -> None:
+        """Winners at 1.5 times the market and losers at 1.0 give beta 0.5.
+
+        Returns:
+            None.
+        """
+        rng = np.random.default_rng(4)
+        months = pd.period_range('2000-01', periods=80, freq='M')
+        market = pd.Series(rng.normal(0.01, 0.04, 80), index=months)
+        names = [f'S{number:02d}' for number in range(20)]
+        returns = pd.DataFrame(0.0, index=months, columns=names)
+        returns['S19'] = 1.5 * market
+        returns['S00'] = 1.0 * market
+        deciles = pd.DataFrame(5.0, index=months, columns=names)
+        deciles['S19'] = 10.0
+        deciles['S00'] = 1.0
+        table = EventTimeReturns().betas(deciles, returns, market, horizon=3)
+        assert table.loc[1, 'beta'] == pytest.approx(0.5, abs=1e-6)
+        assert table.loc[3, 'beta'] == pytest.approx(0.5, abs=1e-6)

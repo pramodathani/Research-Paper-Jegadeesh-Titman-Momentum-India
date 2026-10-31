@@ -155,14 +155,33 @@ class GridTables:
             pd.DataFrame: Rows for each subperiod and month set, with the
                 average gross return, its plain t and the month count.
         """
+        series = self.series(keys, 'gross', boundaries[0][0], boundaries[-1][1])
+        return self.subperiods_of(series, boundaries)
+
+    def subperiods_of(
+        self,
+        series: pd.Series,
+        boundaries: list[tuple[str, str]],
+    ) -> pd.DataFrame:
+        """Scores any monthly series in each subperiod, with and without January.
+
+        Args:
+            series (pd.Series): Monthly returns indexed by month period.
+            boundaries (list[tuple[str, str]]): First and last month of each
+                subperiod.
+
+        Returns:
+            pd.DataFrame: Rows for each subperiod and month set, with the
+                average return, its plain t and the month count.
+        """
         rows = []
         for start, end in boundaries:
-            series = self.series(keys, 'gross', start, end)
+            part = series.dropna().loc[pd.Period(start) : pd.Period(end)]
             sets = {
-                'all months': series,
-                'January': series[series.index.month == 1],
-                'February to December': series[series.index.month != 1],
-                'March and April': series[series.index.month.isin([3, 4])],
+                'all months': part,
+                'January': part[part.index.month == 1],
+                'February to December': part[part.index.month != 1],
+                'March and April': part[part.index.month.isin([3, 4])],
             }
             for name, subset in sets.items():
                 mean, t_value = self.calendar.statistics.mean_and_t(subset)
