@@ -161,6 +161,10 @@ class MakeChartsApplication:
             axis.set_title(f'{name}: % a month after costs', fontsize=10)
             for row in range(4):
                 for column in range(4):
+                    value = grid.iloc[row, column]
+                    shade = (
+                        'white' if value > 0.75 * grid.max().max() else 'black'
+                    )
                     axis.text(
                         column,
                         row,
@@ -168,6 +172,7 @@ class MakeChartsApplication:
                         ha='center',
                         va='center',
                         fontsize=9,
+                        color=shade,
                     )
             figure.colorbar(image, ax=axis, shrink=0.8)
         figure.tight_layout()
