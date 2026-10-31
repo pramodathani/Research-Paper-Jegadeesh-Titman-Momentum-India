@@ -20,6 +20,9 @@ from jegadeesh_titman_momentum_india.data.index_close_downloader import (
     IndexCloseDownloader,
 )
 from jegadeesh_titman_momentum_india.data.nse_session import NseSession
+from jegadeesh_titman_momentum_india.data.results_dates_downloader import (
+    ResultsDatesDownloader,
+)
 
 
 class DownloadNseApplication:
@@ -32,6 +35,7 @@ class DownloadNseApplication:
         'corporate_actions',
         'iima',
         'symbol_changes',
+        'results_dates',
     )
 
     def run(self) -> None:
@@ -58,6 +62,12 @@ class DownloadNseApplication:
         elif arguments.source == 'corporate_actions':
             result = CorporateActionsDownloader(
                 root / 'corporate_actions', first.year, last.year
+            ).run()
+        elif arguments.source == 'results_dates':
+            result = ResultsDatesDownloader(
+                root / 'results_dates',
+                f'{first.year}Q{(first.month - 1) // 3 + 1}',
+                f'{last.year}Q{(last.month - 1) // 3 + 1}',
             ).run()
         elif arguments.source == 'symbol_changes':
             result = self._symbol_changes(root / 'symbol_changes')
