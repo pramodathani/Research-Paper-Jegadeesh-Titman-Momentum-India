@@ -36,6 +36,9 @@ test = [
 live = [
     "tradingmachine",
 ]
+charts = [
+    "matplotlib",
+]
 database = [
     "psycopg[binary]",
     "sqlalchemy",

@@ -99,6 +99,13 @@ class MakeResultsApplication:
         months = pd.period_range('1996-01', END, freq='M')
         self.risk_free = self.factors.risk_free(months)
         self.market_excess = self.factors.factors['mf']
+        pd.DataFrame(
+            {
+                'market_return': self.factors.market_return(),
+                'risk_free': self.factors.factors['rf'],
+                'wml': self.factors.factors['wml'],
+            }
+        ).to_csv(self.out / 'market_monthly.csv')
 
     def _grid_tables(self, grid: pd.DataFrame) -> None:
         """Writes Table I for the main sample and the extension, and more.
