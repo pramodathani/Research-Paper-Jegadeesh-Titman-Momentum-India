@@ -78,7 +78,10 @@ The full grid, both panels and both universes, is in `summary_tables.md`. As in 
   - the top-500 6/6 long-short earned 2.24% gross (t 2.18);
   - the all-shares version lost 0.18%, because its losers earned 3.06% a month.
   - Before 2006, NSE's corporate action list is thin and many actions had to be inferred from price jumps (see `data/README.md`), so we do not rely on the all-shares extension.
-- **Table IX, earnings announcements:** not yet done (gap 25: NSE results dates exist only from August 2007 to March 2025). This is reported as an open item.
+- **Table IX, results announcements** (106,727 quarterly results filed with NSE, formations July 2007 to 2025; NSE's filing list thins after March 2025, gap 25):
+  - Past winners beat past losers by 0.89% (all shares, plain t 2.99) and 1.24% (top 500, t 3.56) over the three days around results announced in the first month after ranking. The gap stays positive through month 3 and fades by month 5.
+  - Among all shares it turns negative in months 15 to 18 (−0.70%, t −2.01, and −0.81%, t −2.16).
+  - This is the paper's pattern: +0.55% to +0.90% in months 1 to 6, about −0.7% in months 11 to 18 (p. 88). Part of the momentum return arrives when results are announced, as the paper's delayed-reaction story predicts.
 
 ## Robustness (6/6, net of costs, Newey-West t)
 

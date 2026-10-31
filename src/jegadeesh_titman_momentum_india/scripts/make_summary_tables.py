@@ -59,6 +59,7 @@ class MakeSummaryTablesApplication:
         parts.append(self._calendar(results))
         parts.append(self._subperiods(results))
         parts.append(self._event_time(results))
+        parts.append(self._table_nine(results))
         parts.append(self._robustness(results))
         parts.append(self._benchmarks(results))
         parts.append(self._futures(results))
@@ -359,6 +360,37 @@ class MakeSummaryTablesApplication:
                 f'({a["cumulative_t"]:.2f}) | {self._percent(b["monthly"])} '
                 f'({b["monthly_t"]:.2f}) | {self._percent(b["cumulative"])} '
                 f'({b["cumulative_t"]:.2f}) |'
+            )
+        return '\n'.join(lines) + '\n'
+
+    def _table_nine(self, results: Path) -> str:
+        """Gives Table IX at selected months.
+
+        Args:
+            results (Path): The results folder.
+
+        Returns:
+            str: Markdown.
+        """
+        lines = [
+            '## Table IX, 3-day results-day returns, winners minus losers, formations 2007-07 to 2025\n',
+            'Days -2 to 0 around quarterly results filed with NSE; plain t.\n',
+            '| Month after formation | U1 (t) | U2 (t) |',
+            '|---|---|---|',
+        ]
+        first = pd.read_csv(
+            results / 'table9_announcements_U1.csv', index_col=0
+        )
+        second = pd.read_csv(
+            results / 'table9_announcements_U2.csv', index_col=0
+        )
+        for month in (1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 24, 30, 36):
+            a = first.loc[month]
+            b = second.loc[month]
+            lines.append(
+                f'| {month} | {self._percent(a["monthly"])} '
+                f'({a["monthly_t"]:.2f}) | {self._percent(b["monthly"])} '
+                f'({b["monthly_t"]:.2f}) |'
             )
         return '\n'.join(lines) + '\n'
 

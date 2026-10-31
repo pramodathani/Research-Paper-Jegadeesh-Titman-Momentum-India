@@ -34,7 +34,8 @@ J = 6 months ranked, K = 6 months held, no skip, holding months January 2005 to 
 5. **Momentum crashes.** The top-500 long-short lost 49% in May 2009 when beaten-down losers rebounded; 2005 to 2009 earned almost nothing. From 2010 it earned 1.55% a month after costs (t 4.55) with a worst drawdown of -33%.
 6. **No January effect; a March and April one instead.** The paper's 7% January loss does not exist in India. March, the last month of the Indian financial year, is strongly positive and April and December negative; July is the most reliable month.
 7. **No long-run reversal in the top 500.** The paper finds half of the first year's gain lost by month 36; in India the cumulative return of 6-month winners minus losers keeps rising to 17.8% after 36 months in the top 500 and stays at about 14% among all shares.
-8. **It matches the outside benchmark.** Our 6/6 series correlates 0.75 to 0.83 with IIMA's Indian momentum factor (WML).
+8. **Results days carry part of it, as in the paper.** Around quarterly results announced in the first month after ranking, winners beat losers by 0.9% to 1.2% over three days (t 3.0 to 3.6); among all shares the gap turns negative 15 to 18 months later, as the paper found.
+9. **It matches the outside benchmark.** Our 6/6 series correlates 0.75 to 0.83 with IIMA's Indian momentum factor (WML).
 
 ## The paper in brief
 
