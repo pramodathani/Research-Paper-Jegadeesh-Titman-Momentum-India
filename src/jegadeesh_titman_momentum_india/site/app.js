@@ -229,8 +229,8 @@ function readHash() {
     return;
   }
   hash.split('-').forEach((part) => {
-    if (/^j\d+$/.test(part)) state.j = Number(part.slice(1));
-    else if (/^k\d+$/.test(part)) state.k = Number(part.slice(1));
+    if (/^j(3|6|9|12)$/.test(part)) state.j = Number(part.slice(1));
+    else if (/^k(3|6|9|12)$/.test(part)) state.k = Number(part.slice(1));
     else if (/^skip[01]$/.test(part)) state.skip = Number(part.slice(4));
     else if (part === 'all') state.universe = 'U1';
     else if (part === 'top500') state.universe = 'U2';
@@ -652,8 +652,21 @@ function mainIndices() {
   return indices;
 }
 
+function reversedInJanuary(universe, skip, j, k, costs, series) {
+  // Reversing a position in January trades the opposite book: the gross
+  // return changes sign but the trading cost does not.
+  const gross = returns(universe, skip, j, k, 'long_short', 'gross');
+  return series.map((value, index) => {
+    if (value === null || !snapshot.months[index].endsWith('-01')) {
+      return value;
+    }
+    const cost = gross[index] - value;
+    return -gross[index] - cost;
+  });
+}
+
 function renderJanuaryCharts(indices, series) {
-  const flipped = series.map((value, index) => (value !== null && snapshot.months[index].endsWith('-01') ? -value : value));
+  const flipped = reversedInJanuary(state.universe, state.skip, state.j, state.k, state.costs, series);
   const years = [];
   const bars = [];
   indices.forEach((index) => {
@@ -702,11 +715,13 @@ function renderFurther(indices) {
   cells.forEach((j) => {
     cells.forEach((k) => {
       const series = returns(state.universe, state.skip, j, k, 'long_short', costs);
-      const flipped = series.map((value, index) => (value !== null && snapshot.months[index].endsWith('-01') ? -value : value));
+      const flipped = reversedInJanuary(state.universe, state.skip, j, k, costs, series);
       const januaries = [];
+      const spreads = [];
       indices.forEach((index) => {
         if (series[index] !== null && snapshot.months[index].endsWith('-01')) {
-          januaries.push(-series[index]);
+          januaries.push(flipped[index]);
+          spreads.push(series[index]);
         }
       });
       const normal = statistics(series, indices, 'long_short');
@@ -714,7 +729,7 @@ function renderFurther(indices) {
       const average = mean(januaries);
       const spread = Math.sqrt(januaries.reduce((total, value) => total + (value - average) ** 2, 0) / (januaries.length - 1));
       const t = average / (spread / Math.sqrt(januaries.length));
-      html += `<tr${mark(j, k)}><th>${j}/${k}</th><td>${pct(normal.mean)}</td><td>${pct(changed.mean)}</td><td>${pct(normal.cagr, 1)}</td><td>${pct(changed.cagr, 1)}</td><td>${pct(-average)}</td><td>${januaries.filter((value) => value < 0).length} / ${januaries.filter((value) => value > 0).length}</td><td>${num(t)}</td></tr>`;
+      html += `<tr${mark(j, k)}><th>${j}/${k}</th><td>${pct(normal.mean)}</td><td>${pct(changed.mean)}</td><td>${pct(normal.cagr, 1)}</td><td>${pct(changed.cagr, 1)}</td><td>${pct(mean(spreads))}</td><td>${januaries.filter((value) => value < 0).length} / ${januaries.filter((value) => value > 0).length}</td><td>${num(t)}</td></tr>`;
     });
   });
   fill('table-january', `${html}</tbody>`);
