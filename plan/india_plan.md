@@ -104,7 +104,7 @@ A and B are the core of the study. C and D are extensions, reported after A and 
 
 ## 8. Where the Indian version cannot match the paper
 
-1. **Shorter sample:** 262 months in the main sample against the paper's 300, in a market with fewer listed shares (about 800 actively traded in 2005, about 2,000 today), so deciles are thinner and t-statistics weaker.
+1. **Shorter sample:** 262 months in the main sample against the paper's 300, in a market with far fewer traded shares early on (the 3 Jan 2005 bhavcopy has 816 rows across all series, the 30 Oct 2026 UDiFF file 3,641), so early deciles are thinner and t-statistics weaker.
 2. **No market cap before 2024:** size groups use traded value, which mixes size with liquidity.
 3. **Corporate actions:** dividends only from 2005; split and bonus records thin before 2005 and possibly in 2005 itself. Missed actions show up as false jumps, which we filter but cannot fully repair.
 4. **Shorting:** the paper's long-short is a paper portfolio in India; only C and D can be traded, and D's universe is small.
