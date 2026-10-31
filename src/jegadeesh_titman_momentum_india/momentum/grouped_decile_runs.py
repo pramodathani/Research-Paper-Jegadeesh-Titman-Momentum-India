@@ -34,6 +34,7 @@ class GroupedDecileRuns:
         """
         self.runner = runner
         self.beta_window = beta_window
+        self.last_deciles = None
 
     def terciles(
         self,
@@ -100,6 +101,7 @@ class GroupedDecileRuns:
         group: int | None,
         formation_months: int = 6,
         holding_months: int = 6,
+        universe: str = 'U1',
     ) -> pd.DataFrame:
         """Runs all ten deciles for one group.
 
@@ -109,13 +111,14 @@ class GroupedDecileRuns:
             group (int | None): The group to run, or None for everyone.
             formation_months (int): J.
             holding_months (int): K.
+            universe (str): The universe to rank, U1 or U2.
 
         Returns:
             pd.DataFrame: Gross monthly returns, one column per decile 1 to
                 10, then the winners-minus-losers column named 10-1.
         """
         runner = self.runner
-        eligible = runner.universes['U1']
+        eligible = runner.universes[universe]
         if group_labels is not None:
             eligible = eligible & (group_labels == group)
         ends = runner.formation_dates[formation_months:]
@@ -124,6 +127,7 @@ class GroupedDecileRuns:
         window.index = runner.months[formation_months:]
         window = window.reindex(runner.months)
         deciles = DecileRanker().rank(window, eligible)
+        self.last_deciles = deciles
         portfolio = CohortPortfolio(runner.monthly_returns, None)
         columns = {}
         for decile in range(1, 11):
