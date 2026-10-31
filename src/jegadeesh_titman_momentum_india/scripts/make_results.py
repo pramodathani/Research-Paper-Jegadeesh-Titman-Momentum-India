@@ -1,6 +1,7 @@
 """Command-line program that runs every results step and writes results/."""
 
 import argparse
+import itertools
 import os
 from pathlib import Path
 
@@ -31,6 +32,7 @@ from jegadeesh_titman_momentum_india.momentum.strategy_summary import (
 )
 from jegadeesh_titman_momentum_india.momentum.study_runner import StudyRunner
 
+PERIODS = (3, 6, 9, 12)
 START = '2005-01'
 END = StudyPeriod.end()
 NIFTY_500 = ('S&P CNX 500', 'CNX 500', 'Nifty 500')
@@ -272,7 +274,7 @@ class MakeResultsApplication:
         nifty50 = IndexReturns().monthly(self.index_daily, NIFTY_50)
         rows = []
         monthly = {}
-        for formation, holding in ((6, 6), (12, 3), (6, 3), (3, 3)):
+        for formation, holding in itertools.product(PERIODS, PERIODS):
             result = portfolios.fno_long_short(members, formation, holding)
             for label, series in (
                 ('gross', result.gross()),
@@ -318,14 +320,12 @@ class MakeResultsApplication:
             None.
         """
         choices = {
-            'formation_choices': (6, 12),
-            'holding_choices': (3, 6),
+            'formation_choices': PERIODS,
+            'holding_choices': PERIODS,
         }
         frames = []
         base = grid[
-            grid['formation_months'].isin((6, 12))
-            & grid['holding_months'].isin((3, 6))
-            & ~grid['skip']
+            ~grid['skip']
         ].copy()
         base['check'] = 'base'
         frames.append(base)
@@ -414,13 +414,19 @@ class MakeResultsApplication:
         count = len(strategies)
         text = (
             f'Core grid: {count} series (2 universes x 2 skip settings x 4 J '
-            f'x 4 K x 3 legs). Robustness: 2 delisting stresses + brokerage '
-            f'+ one-day delay on 4 J/K pairs x 2 universes x 3 legs = 96; '
-            f'top-200 universe, all shares at double impact and a short '
-            f'borrow fee add 12 + 12 + 8 = 32. '
-            f'Portfolios C and D: 4 J/K pairs each, 2 portfolios = 8. '
-            f'Table II, III, VII and benchmark comparisons reuse the '
-            f'6/6 strategy.\n'
+            f'x 4 K x 3 legs). Robustness, each on 16 J/K pairs without the '
+            f'gap: 2 delisting stresses, brokerage and a one-day delay on 2 '
+            f'universes x 3 legs (4 x 96 = 384), a top-200 universe on 3 '
+            f'legs, all shares at double impact on 3 legs, and a short borrow '
+            f'fee on 2 universes (48 + 48 + 32 = 128). Portfolios C and D: '
+            f'16 J/K pairs each, 2 portfolios = 32. Further tests '
+            f'(results/further, results/live): the flat 0.5% cost test and '
+            f'buy-and-hold on 32 J/K cells each, the January reversal on 4 '
+            f'variants, Section III on 2 universes, and the live page '
+            f'precomputes 64 specifications of each. No new parameters were '
+            f'searched. Tables II, III, VII and benchmark comparisons reuse '
+            f'the 6/6 strategy on the page and are precomputed for every '
+            f'specification.\n'
         )
         (self.out / 'variants_tried.txt').write_text(text)
         print(text)

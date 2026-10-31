@@ -14,15 +14,22 @@ from jegadeesh_titman_momentum_india.momentum.study_period import (
 from jegadeesh_titman_momentum_india.data.timescale_store import (
     TimescaleStore,
 )
+from jegadeesh_titman_momentum_india.momentum.announcement_returns import (
+    AnnouncementReturns,
+)
 from jegadeesh_titman_momentum_india.momentum.buy_and_hold import BuyAndHold
 from jegadeesh_titman_momentum_india.momentum.calendar_month_table import (
     CalendarMonthTable,
+)
+from jegadeesh_titman_momentum_india.momentum.event_time_returns import (
+    EventTimeReturns,
 )
 from jegadeesh_titman_momentum_india.momentum.grouped_decile_runs import (
     GroupedDecileRuns,
 )
 from jegadeesh_titman_momentum_india.momentum.iima_factors import IimaFactors
 from jegadeesh_titman_momentum_india.momentum.joint_tests import JointTests
+from jegadeesh_titman_momentum_india.momentum.paper_tables import PaperTables
 from jegadeesh_titman_momentum_india.momentum.profit_sources import (
     ProfitSources,
 )
@@ -71,10 +78,28 @@ class MakeLiveTablesApplication:
             'B3 (high beta)': (beta, 3),
         }
         self._equal_market()
-        results = {}
+        self.scorer = PaperTables(
+            runner=self.runner,
+            market_excess=self.market_excess,
+            risk_free=self.risk_free,
+            start=str(START),
+            end=str(END),
+        )
+        announcements = pd.read_parquet(
+            'data/derived/announcement_returns.parquet'
+        )
+        self.announcement_matrix = AnnouncementReturns().monthly_matrix(
+            announcements,
+            self.runner.months,
+            self.runner.monthly_returns.columns,
+        )
+        results = {'event': {}}
         for universe in ('U1', 'U2'):
             for skip in (0, 1):
                 for formation in PERIODS:
+                    results['event'][f'{universe}|{skip}|{formation}'] = (
+                        self._event(universe, skip, formation)
+                    )
                     for holding in PERIODS:
                         key = f'{universe}|{skip}|{formation}|{holding}'
                         results[key] = self._one(
@@ -294,6 +319,7 @@ class MakeLiveTablesApplication:
             frame = self.groups.decile_returns(
                 labels, group, formation, holding, universe, bool(skip)
             )
+            self.members = self.groups.last_deciles
             deciles = frame[list(range(1, 11))].loc[START:END].dropna()
             f_equal, p_equal = tests.equal_means(deciles)
             excess = deciles.sub(self.risk_free.reindex(deciles.index), axis=0)
@@ -304,6 +330,7 @@ class MakeLiveTablesApplication:
                 spread, list(range(2, 13))
             )
             output[name] = {
+                'deciles': self._decile_rows(frame, name, labels),
                 'equal': [self._round(f_equal), self._round(p_equal, 5)],
                 'alpha': [self._round(f_alpha), self._round(p_alpha, 5)],
                 'calendar': [self._round(f_all), self._round(p_all, 5)],
@@ -313,6 +340,78 @@ class MakeLiveTablesApplication:
                 ],
             }
         return output
+
+    def _decile_rows(
+        self,
+        frame: pd.DataFrame,
+        name: str,
+        labels: pd.DataFrame | None,
+    ) -> list[list]:
+        """Scores the ten deciles and their spread.
+
+        Args:
+            frame (pd.DataFrame): Gross returns of deciles 1 to 10 and 10-1.
+            name (str): The group's name.
+            labels (pd.DataFrame | None): None for the whole universe.
+
+        Returns:
+            list[list]: Per decile: label, mean, t, alpha, alpha t, beta and,
+                for the whole universe, the members' average traded value in
+                rupees crore.
+        """
+        rows = []
+        for column in list(range(1, 11)) + ['10-1']:
+            score = self.scorer._score(frame[column].rename(column))
+            traded = None
+            if labels is None and column != '10-1':
+                average = self.runner.liquidity.where(
+                    self.members == column
+                ).mean(axis=1)
+                traded = average.loc[START:END].mean() / 1.0e7
+            rows.append(
+                [
+                    str(column),
+                    self._round(score['mean'], 5),
+                    self._round(score['t_statistic']),
+                    self._round(score['alpha'], 5),
+                    self._round(score['alpha_t']),
+                    self._round(score['beta']),
+                    self._round(traded, 1) if traded is not None else None,
+                ]
+            )
+        return rows
+
+    def _event(self, universe: str, skip: int, formation: int) -> dict:
+        """Gives winners minus losers in event time, and around results.
+
+        Args:
+            universe (str): U1 or U2.
+            skip (int): The gap switch.
+            formation (int): J.
+
+        Returns:
+            dict: Thirty-six months of monthly and cumulative returns with
+                t-statistics, and the three-day results-announcement spread.
+        """
+        runner = self.runner
+        deciles = runner.deciles(universe, formation, bool(skip))
+        maker = EventTimeReturns()
+        main = deciles.copy()
+        main.loc[main.index < START] = np.nan
+        table = maker.winners_minus_losers(main, runner.monthly_returns, 36)
+        late = deciles.copy()
+        late.loc[late.index < pd.Period('2007-07', freq='M')] = np.nan
+        around = maker.winners_minus_losers(
+            late, self.announcement_matrix, 36
+        )
+        return {
+            'monthly': [self._round(v, 5) for v in table['monthly']],
+            'monthly_t': [self._round(v) for v in table['monthly_t']],
+            'cumulative': [self._round(v, 5) for v in table['cumulative']],
+            'cumulative_t': [self._round(v) for v in table['cumulative_t']],
+            'announce': [self._round(v, 5) for v in around['monthly']],
+            'announce_t': [self._round(v) for v in around['monthly_t']],
+        }
 
     @staticmethod
     def _round(value: float, places: int = 4) -> float | None:

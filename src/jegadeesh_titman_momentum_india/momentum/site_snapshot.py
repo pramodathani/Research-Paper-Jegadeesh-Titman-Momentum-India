@@ -183,59 +183,16 @@ class SiteSnapshot:
         """Collects the fixed result tables of the main sample.
 
         Returns:
-            dict[str, Any]: Tables II, III, VII and IX, the robustness checks,
-                portfolios C and D and the comparison with IIMA's WML.
+            dict[str, Any]: The robustness checks and portfolios C and D.
         """
         folder = self.results
         tables = {
-            'table2': {
-                universe: self._records(
-                    pd.read_csv(folder / f'table2_deciles_{universe}.csv')
-                )
-                for universe in ('U1', 'U2')
-            },
-            'table3': self._records(
-                pd.read_csv(folder / 'table3_size_beta_groups.csv')
-            ),
-            'table7': {
-                universe: self._records(
-                    pd.read_csv(folder / f'table7_event_time_{universe}.csv')
-                )
-                for universe in ('U1', 'U2')
-            },
-            'table9': {
-                universe: self._records(
-                    pd.read_csv(folder / f'table9_announcements_{universe}.csv')
-                )
-                for universe in ('U1', 'U2')
-            },
             'robustness': self._records(
                 pd.read_csv(folder / 'robustness_checks.csv')
             ),
             'portfolios_c_d': self._records(
                 pd.read_csv(folder / 'portfolios_c_d.csv')
             ),
-            'iima': self._records(pd.read_csv(folder / 'vs_iima_wml.csv')),
-            'long_only': self._records(
-                pd.read_csv(folder / 'long_only_vs_benchmarks.csv')
-            ),
-        }
-        further = folder / 'further'
-        names = (
-            'january_reversal',
-            'section3_profit_summary',
-            'section3_decomposition',
-            'section3_lead_lag',
-            'table3_joint_tests',
-            'table4_by_size_ftests',
-            'flat_cost_test',
-            'alpha_by_market_weighting',
-            'buy_and_hold_vs_rebalanced',
-        )
-        tables['further'] = {
-            name: self._records(pd.read_csv(further / f'{name}.csv'))
-            for name in names
-            if (further / f'{name}.csv').exists()
         }
         return tables
 

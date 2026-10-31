@@ -127,6 +127,16 @@ All data and results are stored in TimescaleDB under the schema `jegadeesh_and_t
 
 Monthly strategy returns also go to the shared table `results.strategy_returns` when the Results stage is done.
 
+Other places this study writes to:
+
+| Where | Holds |
+|---|---|
+| MongoDB `research_analysts.findings` | One document per finding, ids starting `jegadeesh-and-titman-research-analyst:`; written by hand at each stage, 25 documents so far |
+| ChromaDB collection `findings` | The same findings' text, searchable by meaning, with the same ids |
+| `results.strategy_returns` (TimescaleDB) | Shared table of monthly strategy returns, written by `scripts/store_shared_results.py` |
+
+The results files in `results/` and the page's `snapshot.json` are rebuilt from these tables and the downloaded files by `scripts/update_study.py`; the repository, not the database, is the source of truth.
+
 ## Repository layout
 
 ```

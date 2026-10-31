@@ -50,7 +50,6 @@ const state = {
   flat: 0.5,
   sample: '2005-01|2026-10', // replaced by the snapshot's last month on load
   impactTouched: false,
-  decileUniverse: 'U2',
 };
 
 function percent(value, places = 2) {
@@ -334,14 +333,6 @@ function bindControls() {
       document.getElementById('copy-citation').textContent = 'Copied';
     });
   });
-  document.querySelectorAll('#switch-deciles button').forEach((button) => {
-    button.addEventListener('click', () => {
-      state.decileUniverse = button.dataset.universe;
-      document.querySelectorAll('#switch-deciles button').forEach((other) => {
-        other.classList.toggle('active', other === button);
-      });
-      renderDeciles();
-    });
   });
 }
 
@@ -548,55 +539,56 @@ function renderPaper() {
   document.getElementById('table-paper').innerHTML = `${html}</tbody>`;
 }
 
+function liveEntry(universe, skip, j, k) {
+  return snapshot.live[`${universe}|${skip}|${j}|${k}`];
+}
+
 function renderDeciles() {
-  const rows = snapshot.tables.table2[state.decileUniverse];
+  const rows = liveEntry(state.universe, state.skip, state.j, state.k).joint.All.deciles;
   let html = '<thead><tr><th>Decile</th><th>Mean, %</th><th>Beta</th><th>Alpha, %</th><th>Traded value, ₹ crore</th></tr></thead><tbody>';
-  rows.forEach((row) => {
-    const label = row.decile === '10-1' ? '10 − 1' : row.decile === '1' || row.decile === 1 ? '1 (losers)' : row.decile === '10' || row.decile === 10 ? '10 (winners)' : row.decile;
-    html += `<tr class="${String(row.decile) === '10-1' ? 'group-start' : ''}"><th>${label}</th>${cell(row.mean, row.t_statistic)}<td>${signed(row.beta)}</td>${cell(row.alpha, row.alpha_t)}<td>${row.average_traded_value_crore === null ? '' : row.average_traded_value_crore.toFixed(1)}</td></tr>`;
+  rows.forEach(([decile, mean, t, alpha, alphaT, beta, traded]) => {
+    const label = decile === '10-1' ? '10 − 1' : decile === '1' ? '1 (losers)' : decile === '10' ? '10 (winners)' : decile;
+    html += `<tr class="${decile === '10-1' ? 'group-start' : ''}"><th>${label}</th>${cell(mean, t)}<td>${signed(beta)}</td>${cell(alpha, alphaT)}<td>${traded === null ? '' : traded.toFixed(1)}</td></tr>`;
   });
   document.getElementById('table-deciles').innerHTML = `${html}</tbody>`;
 }
 
 function renderGroups() {
-  const rows = snapshot.tables.table3;
-  const groups = [...new Set(rows.map((row) => row.group))];
+  const joint = liveEntry('U1', state.skip, state.j, state.k).joint;
+  const groups = Object.keys(joint);
   let html = `<thead><tr><th></th>${groups.map((group) => `<th>${group}</th>`).join('')}</tr></thead><tbody>`;
-  const pick = (group, decile) => rows.find((row) => row.group === group && String(row.decile) === decile);
+  const pick = (group, decile) => joint[group].deciles.find((row) => row[0] === decile);
   html += `<tr class="group-start"><th colspan="${groups.length + 1}"><i>Panel A: average monthly return, %</i></th></tr>`;
   ['1', '2', '5', '9', '10', '10-1'].forEach((decile) => {
     html += `<tr><th>${decile === '10-1' ? 'P10 − P1' : `P${decile}`}</th>`;
-    groups.forEach((group) => { const row = pick(group, decile); html += cell(row.mean, row.t_statistic); });
+    groups.forEach((group) => { const row = pick(group, decile); html += cell(row[1], row[2]); });
     html += '</tr>';
   });
   html += `<tr class="group-start"><th colspan="${groups.length + 1}"><i>Panel B: alpha against the market, %</i></th></tr>`;
   ['1', '10', '10-1'].forEach((decile) => {
     html += `<tr><th>${decile === '10-1' ? 'P10 − P1' : `P${decile}`}</th>`;
-    groups.forEach((group) => { const row = pick(group, decile); html += cell(row.alpha, row.alpha_t); });
+    groups.forEach((group) => { const row = pick(group, decile); html += cell(row[3], row[4]); });
     html += '</tr>';
   });
   document.getElementById('table-groups').innerHTML = `${html}</tbody>`;
 }
 
 function renderEvent() {
-  const first = snapshot.tables.table7.U1;
-  const second = snapshot.tables.table7.U2;
+  const first = snapshot.live.event[`U1|${state.skip}|${state.j}`];
+  const second = snapshot.live.event[`U2|${state.skip}|${state.j}`];
   const options = baseOptions();
-  options.xAxis = {type: 'category', name: 'Months after ranking', nameLocation: 'middle', nameGap: 26, data: first.map((row) => row.month_after)};
+  options.xAxis = {type: 'category', name: 'Months after ranking', nameLocation: 'middle', nameGap: 26, data: first.cumulative.map((value, index) => index + 1)};
   options.yAxis = {type: 'value', axisLabel: {formatter: '{value}%'}, splitLine: {lineStyle: {color: '#e8eaed'}}};
   options.tooltip.valueFormatter = (value) => `${value.toFixed(2)}%`;
   options.series = [
-    {name: 'Top 500', type: 'line', data: second.map((row) => row.cumulative * 100), lineStyle: {color: COLOURS.blue, width: 2.4}, itemStyle: {color: COLOURS.blue}, symbolSize: 4},
-    {name: 'All NSE shares', type: 'line', data: first.map((row) => row.cumulative * 100), lineStyle: {color: COLOURS.green, width: 2}, itemStyle: {color: COLOURS.green}, symbolSize: 4},
+    {name: 'Top 500', type: 'line', data: second.cumulative.map((value) => value * 100), lineStyle: {color: COLOURS.blue, width: 2.4}, itemStyle: {color: COLOURS.blue}, symbolSize: 4},
+    {name: 'All NSE shares', type: 'line', data: first.cumulative.map((value) => value * 100), lineStyle: {color: COLOURS.green, width: 2}, itemStyle: {color: COLOURS.green}, symbolSize: 4},
   ];
   chart('chart-event').setOption(options, true);
   const months = [1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 24, 30, 36];
-  const announcements = snapshot.tables.table9;
   let html = '<thead><tr><th>Month after ranking</th><th>All NSE shares, %</th><th>Top 500, %</th></tr></thead><tbody>';
   months.forEach((month) => {
-    const a = announcements.U1.find((row) => row.month_after === month);
-    const b = announcements.U2.find((row) => row.month_after === month);
-    html += `<tr><th>${month}</th>${cell(a.monthly, a.monthly_t)}${cell(b.monthly, b.monthly_t)}</tr>`;
+    html += `<tr><th>${month}</th>${cell(first.announce[month - 1], first.announce_t[month - 1])}${cell(second.announce[month - 1], second.announce_t[month - 1])}</tr>`;
   });
   document.getElementById('table-announcements').innerHTML = `${html}</tbody>`;
 }
@@ -604,16 +596,14 @@ function renderEvent() {
 function renderTradeable() {
   const indices = snapshot.months.map((month, index) => index).filter((index) => snapshot.months[index] >= '2005-01');
   const rows = [];
-  [[6, 6], [12, 3]].forEach(([j, k]) => {
-    ['gross', 'net'].forEach((costs) => {
-      const stats = statistics(returns('U2', 0, j, k, 'buy', costs), indices, 'buy');
-      rows.push(['B', 'Top-500 winners, long only', j, k, costs, stats.count, stats.mean, stats.neweyWestT, stats.worstDrawdown, stats.alpha, stats.alphaT]);
-    });
+  ['gross', 'net'].forEach((costs) => {
+    const stats = statistics(returns('U2', state.skip, state.j, state.k, 'buy', costs), indices, 'buy');
+    rows.push(['B', 'Top-500 winners, long only', state.j, state.k, costs, stats.count, stats.mean, stats.neweyWestT, stats.worstDrawdown, stats.alpha, stats.alphaT]);
   });
   snapshot.tables.portfolios_c_d.forEach((row) => {
     const match = row.portfolio.match(/J(\d+) K(\d+) (gross|net)$/);
     const [j, k, costs] = [Number(match[1]), Number(match[2]), match[3]];
-    if (!((j === 6 && k === 6) || (j === 12 && k === 3))) return;
+    if (j !== state.j || k !== state.k) return;
     const isHedged = row.portfolio.startsWith('C');
     rows.push([isHedged ? 'C' : 'D', isHedged ? 'Winners hedged with NIFTY 50 futures, from 2012-03' : 'F&O shares, losers sold through futures', j, k, costs, row.periods, row.mean, row.newey_west_t, row.maximum_drawdown, row.alpha, row.alpha_t]);
   });
@@ -630,7 +620,7 @@ function renderTradeable() {
 }
 
 function renderRobustness() {
-  const rows = snapshot.tables.robustness.filter((row) => row.formation_months === 6 && row.holding_months === 6);
+  const rows = snapshot.tables.robustness.filter((row) => row.formation_months === state.j && row.holding_months === state.k);
   const find = (check, universe, leg) => rows.find((row) => row.check === check && row.universe === universe && row.leg === leg);
   const checks = [
     ['base', 'Base case'],
@@ -661,6 +651,38 @@ function mainIndices() {
     }
   });
   return indices;
+}
+
+function renderJanuaryCharts(indices, series) {
+  const flipped = series.map((value, index) => (value !== null && snapshot.months[index].endsWith('-01') ? -value : value));
+  const years = [];
+  const bars = [];
+  indices.forEach((index) => {
+    if (series[index] !== null && snapshot.months[index].endsWith('-01')) {
+      years.push(snapshot.months[index].slice(0, 4));
+      bars.push(series[index] * 100);
+    }
+  });
+  let options = baseOptions();
+  options.legend = {show: false};
+  options.grid.top = 20;
+  options.xAxis = {type: 'category', data: years, axisLabel: {fontFamily: FONT}};
+  options.yAxis = {type: 'value', axisLabel: {formatter: '{value}%'}, splitLine: {lineStyle: {color: '#e8eaed'}}};
+  options.tooltip.valueFormatter = (value) => `${value.toFixed(2)}%`;
+  options.series = [{
+    name: 'January return of the strategy', type: 'bar',
+    data: bars.map((value) => ({value, itemStyle: {color: value >= 0 ? COLOURS.green : COLOURS.red}})),
+  }];
+  chart('chart-january-years').setOption(options, true);
+  options = baseOptions();
+  options.xAxis = dateAxis();
+  options.yAxis = {type: 'log', logBase: 10, name: 'Growth of ₹1', nameTextStyle: {fontFamily: FONT}, axisLabel: {formatter: (value) => (value >= 1 ? value.toFixed(0) : value.toFixed(2))}, splitLine: {lineStyle: {color: '#e8eaed'}}};
+  options.tooltip.valueFormatter = (value) => (Number.isFinite(value) ? value.toFixed(2) : '');
+  options.series = [
+    {name: 'As ranked', type: 'line', showSymbol: false, data: wealthCurve(series, indices), lineStyle: {width: 2.4, color: COLOURS.blue}, itemStyle: {color: COLOURS.blue}},
+    {name: 'Reversed in every January', type: 'line', showSymbol: false, data: wealthCurve(flipped, indices), lineStyle: {width: 2.4, color: COLOURS.red}, itemStyle: {color: COLOURS.red}},
+  ];
+  chart('chart-january-growth').setOption(options, true);
 }
 
 function renderFurther(indices) {
@@ -697,6 +719,7 @@ function renderFurther(indices) {
     });
   });
   fill('table-january', `${html}</tbody>`);
+  renderJanuaryCharts(indices, returns(state.universe, state.skip, state.j, state.k, 'long_short', costs));
 
   // Table 10: Section III, looked up.
   const entry = live[`${state.universe}|${state.skip}|${state.j}|${state.k}`];
@@ -827,6 +850,11 @@ function update() {
   renderGrid(indices);
   renderCalendar(indices);
   renderFurther(indices);
+  renderDeciles();
+  renderGroups();
+  renderEvent();
+  renderTradeable();
+  renderRobustness();
 }
 
 async function start() {
@@ -839,11 +867,6 @@ async function start() {
   readHash();
   bindControls();
   renderPaper();
-  renderDeciles();
-  renderGroups();
-  renderEvent();
-  renderTradeable();
-  renderRobustness();
   update();
   window.addEventListener('resize', () => Object.values(charts).forEach((item) => item.resize()));
 }
