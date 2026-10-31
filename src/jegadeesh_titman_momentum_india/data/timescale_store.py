@@ -75,6 +75,55 @@ class TimescaleStore:
             'date',
         ),
         (
+            'daily_returns',
+            (
+                'date date NOT NULL, symbol text NOT NULL, '
+                'ret double precision, '
+                'PRIMARY KEY (symbol, date)'
+            ),
+            'date',
+        ),
+        (
+            'return_flags',
+            (
+                'date date NOT NULL, symbol text NOT NULL, '
+                'kind text NOT NULL, ret_raw double precision, '
+                'PRIMARY KEY (symbol, kind, date)'
+            ),
+            'date',
+        ),
+        (
+            'monthly_returns',
+            (
+                'month date NOT NULL, symbol text NOT NULL, '
+                'ret double precision, '
+                'PRIMARY KEY (symbol, month)'
+            ),
+            'month',
+        ),
+        (
+            'universe_membership',
+            (
+                'month date NOT NULL, universe text NOT NULL, '
+                'symbol text NOT NULL, '
+                'PRIMARY KEY (universe, symbol, month)'
+            ),
+            'month',
+        ),
+        (
+            'strategy_returns_detail',
+            (
+                'month date NOT NULL, universe text NOT NULL, '
+                'skip boolean NOT NULL, formation_months integer NOT NULL, '
+                'holding_months integer NOT NULL, leg text NOT NULL, '
+                'gross double precision, net double precision, '
+                'turnover double precision, holding_count double precision, '
+                'PRIMARY KEY (universe, skip, formation_months, '
+                'holding_months, leg, month)'
+            ),
+            'month',
+        ),
+        (
             'iima_factors_monthly',
             (
                 'month date NOT NULL, smb double precision, '
