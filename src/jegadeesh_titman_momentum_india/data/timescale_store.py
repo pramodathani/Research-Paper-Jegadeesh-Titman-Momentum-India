@@ -170,6 +170,17 @@ class TimescaleStore:
                 f'migrate_data => TRUE)'
             )
 
+    def clear(self, table: str) -> None:
+        """Empties a derived table before it is rebuilt.
+
+        Args:
+            table (str): The table name in the study's schema.
+
+        Returns:
+            None.
+        """
+        self.connection.execute(f'TRUNCATE {self.schema}.{table}')
+
     def upsert(
         self,
         table: str,

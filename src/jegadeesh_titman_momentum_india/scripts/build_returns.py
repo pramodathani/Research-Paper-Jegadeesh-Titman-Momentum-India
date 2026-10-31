@@ -75,6 +75,8 @@ class BuildReturnsApplication:
             return
         store = TimescaleStore()
         store.create_tables()
+        store.clear('daily_returns')
+        store.clear('return_flags')
         stored = returns[['date', 'symbol', 'ret']].dropna(subset=['ret'])
         for start in range(0, len(stored), 2_000_000):
             store.upsert(

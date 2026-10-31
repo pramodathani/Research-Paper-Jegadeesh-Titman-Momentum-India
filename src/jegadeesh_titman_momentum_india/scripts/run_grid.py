@@ -50,6 +50,12 @@ class RunGridApplication:
         """
         store = TimescaleStore()
         store.create_tables()
+        for table in (
+            'monthly_returns',
+            'universe_membership',
+            'strategy_returns_detail',
+        ):
+            store.clear(table)
         monthly = runner.monthly_returns.copy()
         monthly.index = monthly.index.to_timestamp()
         monthly.index.name = 'month'
