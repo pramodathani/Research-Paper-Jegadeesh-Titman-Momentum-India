@@ -87,6 +87,40 @@ class TestProfitSources:
         assert abs(result['factor']) < 0.2 * expected_variance
         assert abs(result['idiosyncratic']) < 0.2 * expected_variance
 
+    def test_one_extreme_share_dominates_the_decomposition(self) -> None:
+        """A share with a huge run-up inflates the beta variance; dropping it fixes that.
+
+        Returns:
+            None.
+        """
+        rng = np.random.default_rng(11)
+        returns = rng.normal(0.01, 0.05, (240, 200))
+        returns[100:106, 0] = 1.5
+        monthly, universe, past = make_tables(returns)
+        distorted = ProfitSources(monthly, universe, past).decomposition()
+        kept = [column for column in monthly.columns if column != 'S000']
+        clean = ProfitSources(
+            monthly[kept], universe[kept], past[kept]
+        ).decomposition()
+        assert distorted['beta_variance'] > 20 * clean['beta_variance']
+
+    def test_first_period_respects_eligibility(self) -> None:
+        """A share that is never eligible does not enter the first period.
+
+        Returns:
+            None.
+        """
+        rng = np.random.default_rng(12)
+        returns = rng.normal(0.01, 0.05, (240, 100))
+        monthly, universe, past = make_tables(returns)
+        universe['S000'] = False
+        with_flag = ProfitSources(monthly, universe, past).decomposition()
+        kept = monthly.columns[1:]
+        without = ProfitSources(
+            monthly[kept], universe[kept], past[kept]
+        ).decomposition()
+        assert with_flag['total'] == pytest.approx(without['total'], rel=1e-9)
+
     def test_lead_lag_recovers_a_known_slope(self) -> None:
         """A profit built from the squared market return gives its slope back.
 
