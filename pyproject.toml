@@ -24,6 +24,7 @@ dependencies = [
     "numpy",
     "pandas",
     "pyarrow",
+    "requests",
 ]
 
 [project.optional-dependencies]
