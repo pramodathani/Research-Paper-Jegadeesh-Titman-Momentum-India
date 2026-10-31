@@ -32,7 +32,8 @@ class IndexCloseParser:
         raw = pd.read_csv(io.StringIO(text), dtype=str, index_col=False)
         raw.columns = [name.strip() for name in raw.columns]
         table = pd.DataFrame()
-        table['date'] = pd.to_datetime(raw['Index Date'], format='%d-%m-%Y')
+        dates = raw['Index Date'].str.strip().str.replace('/', '-')
+        table['date'] = pd.to_datetime(dates, format='%d-%m-%Y')
         table['index_name'] = raw['Index Name'].str.strip()
         table['close'] = pd.to_numeric(
             raw['Closing Index Value'], errors='coerce'

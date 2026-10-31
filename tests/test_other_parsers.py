@@ -32,6 +32,19 @@ class TestIndexCloseParser:
         assert table['div_yield'].iloc[0] == 1.04
         assert pd.isna(table['pe'].iloc[1])
 
+    def test_slash_dates(self) -> None:
+        """A date written 01/06/2015 is read as 1 June 2015.
+
+        Returns:
+            None.
+        """
+        text = (
+            'Index Name,Index Date,Closing Index Value,P/E,P/B,Div Yield\n'
+            'Nifty 500,01/06/2015,100,-,-,-\n'
+        )
+        table = IndexCloseParser().parse_text(text)
+        assert str(table['date'].iloc[0].date()) == '2015-06-01'
+
 
 class TestFnoBhavcopyParser:
     """Tests of FnoBhavcopyParser."""
