@@ -36,6 +36,7 @@ class StudyRunner:
         monthly_returns: Holding returns by month and share.
         formation_dates: The last trading day of each month.
         universes: The bool tables for each universe name.
+        liquidity: Median daily traded value before each formation date.
         impact_costs: Market impact per side for each universe name.
         skip_days: Trading days of the gap in the skip variant.
         brokerage: Brokerage per side as a fraction of value.
@@ -69,7 +70,10 @@ class StudyRunner:
         self.monthly_returns = MonthlyReturns().build(self.matrices.returns)
         self.formation_dates = self.matrices.month_end_dates()
         self.months = pd.PeriodIndex(self.formation_dates, freq='M')
-        u1, u2 = UniverseBuilder(self.matrices).build(self.formation_dates)
+        builder = UniverseBuilder(self.matrices)
+        u1, u2 = builder.build(self.formation_dates)
+        self.liquidity = builder.liquidity(self.formation_dates)
+        self.liquidity.index = self.months
         u1.index = self.months
         u2.index = self.months
         self.universes = {
@@ -86,6 +90,7 @@ class StudyRunner:
         universe: str,
         formation_months: int,
         skip: bool,
+        eligible: pd.DataFrame | None = None,
     ) -> pd.DataFrame:
         """Ranks shares on their past return and gives each a decile.
 
@@ -97,6 +102,8 @@ class StudyRunner:
             universe (str): U1 or U2.
             formation_months (int): J, the length of the ranking window.
             skip (bool): Whether to leave out the last trading week.
+            eligible (pd.DataFrame | None): Bools to use in place of the
+                universe's, or None for the universe's own.
 
         Returns:
             pd.DataFrame: Deciles 1 to 10, one row per month.
@@ -109,7 +116,9 @@ class StudyRunner:
         window = self.matrices.window_returns(starts, ends)
         window.index = self.months[formation_months:]
         window = window.reindex(self.months)
-        return DecileRanker().rank(window, self.universes[universe])
+        if eligible is None:
+            eligible = self.universes[universe]
+        return DecileRanker().rank(window, eligible)
 
     def cost_model(self, universe: str) -> DeliveryCosts:
         """Gives the delivery cost model for a universe.

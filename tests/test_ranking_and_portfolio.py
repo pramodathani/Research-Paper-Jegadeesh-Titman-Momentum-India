@@ -10,11 +10,20 @@ from jegadeesh_titman_momentum_india.momentum.cohort_portfolio import (
 from jegadeesh_titman_momentum_india.momentum.decile_ranker import (
     DecileRanker,
 )
+from jegadeesh_titman_momentum_india.momentum.futures_portfolios import (
+    FuturesPortfolios,
+)
+from jegadeesh_titman_momentum_india.momentum.grouped_decile_runs import (
+    GroupedDecileRuns,
+)
 from jegadeesh_titman_momentum_india.momentum.long_short_result import (
     LongShortResult,
 )
 from jegadeesh_titman_momentum_india.momentum.price_matrices import (
     PriceMatrices,
+)
+from jegadeesh_titman_momentum_india.momentum.study_runner import (
+    StudyRunner,
 )
 from jegadeesh_titman_momentum_india.momentum.universe_builder import (
     UniverseBuilder,
@@ -193,3 +202,56 @@ class TestCohortPortfolio:
         )
         assert long_short.gross().iloc[1] == pytest.approx(0.15)
         assert long_short.net().iloc[1] == pytest.approx(0.15)
+
+
+class TestGroupedDecileRuns:
+    """Tests of the tercile cut in GroupedDecileRuns."""
+
+    def test_terciles_split_nine_shares_three_each(self) -> None:
+        """Nine shares give three groups of three, lowest value in group 1.
+
+        Returns:
+            None.
+        """
+        columns = [f'S{number}' for number in range(9)]
+        values = pd.DataFrame(
+            [np.arange(9, dtype=float)],
+            index=pd.PeriodIndex(['2010-01'], freq='M'),
+            columns=columns,
+        )
+        eligible = pd.DataFrame(True, index=values.index, columns=columns)
+        groups = GroupedDecileRuns(object()).terciles(values, eligible)
+        assert list(groups.iloc[0]) == [1, 1, 1, 2, 2, 2, 3, 3, 3]
+
+
+class TestFuturesPortfolios:
+    """Tests of the hedged long-only portfolio."""
+
+    def test_hedge_subtracts_market_and_adds_risk_free(self) -> None:
+        """A 10% winner in a 4% market with 1% risk-free earns 7% gross.
+
+        Returns:
+            None.
+        """
+        dates = pd.bdate_range('2010-01-01', periods=300)
+        rows = []
+        for symbol in [f'S{number:02d}' for number in range(20)]:
+            drift = 0.0001 * int(symbol[1:])
+            for date in dates:
+                rows.append((date, symbol, 100.0, 1.0e7, drift))
+        daily = pd.DataFrame(
+            rows,
+            columns=['date', 'symbol', 'close', 'traded_value', 'ret'],
+        )
+        runner = StudyRunner(daily)
+        months = runner.months
+        market = pd.Series(0.04, index=months)
+        risk_free = pd.Series(0.01, index=months)
+        portfolios = FuturesPortfolios(runner)
+        result = portfolios.hedged_long_only(market, risk_free, 3, 3)
+        winners_only = CohortPortfolio(runner.monthly_returns, None).run(
+            runner.deciles('U2', 3, False), 10, 3
+        )
+        expected = winners_only.gross_returns.loc[result.index] - 0.03
+        assert result['gross'].to_numpy() == pytest.approx(expected.to_numpy())
+        assert (result['net'] < result['gross']).all()

@@ -50,6 +50,32 @@ class UniverseBuilder:
         self.liquidity_days = liquidity_days
         self.recent_days = recent_days
 
+    def liquidity(self, formation_dates: pd.DatetimeIndex) -> pd.DataFrame:
+        """Gives each share's median daily traded value before each date.
+
+        Days without trading count as zero.
+
+        Args:
+            formation_dates (pd.DatetimeIndex): Trading days.
+
+        Returns:
+            pd.DataFrame: Median traded value in rupees, one row per date.
+        """
+        calendar = self.matrices.traded_value.index
+        rows = np.zeros(
+            (len(formation_dates), self.matrices.traded_value.shape[1])
+        )
+        for row, date in enumerate(formation_dates):
+            position = calendar.get_loc(date)
+            start = max(position - self.liquidity_days + 1, 0)
+            window = self.matrices.traded_value.iloc[start : position + 1]
+            rows[row] = window.fillna(0.0).median(axis=0).to_numpy(dtype=float)
+        return pd.DataFrame(
+            rows,
+            index=formation_dates,
+            columns=self.matrices.traded_value.columns,
+        )
+
     def build(
         self,
         formation_dates: pd.DatetimeIndex,
