@@ -297,22 +297,70 @@ Days -2 to 0 around quarterly results filed with NSE; plain t.
 
 | Portfolio | Months | Mean | NW t | Worst drawdown | Alpha (t) |
 |---|---|---|---|---|---|
-| D F&O long-short J6 K6 gross | 256 | 0.77 | 1.66 | -66.56 | 1.14 (2.62) |
-| D F&O long-short J6 K6 net | 256 | 0.65 | 1.40 | -67.05 | 1.02 (2.34) |
-| C top-500 winners hedged with NIFTY futures J6 K6 gross | 176 | 1.45 | 3.64 | -27.76 | 1.01 (2.95) |
-| C top-500 winners hedged with NIFTY futures J6 K6 net | 176 | 1.05 | 2.65 | -32.05 | 0.61 (1.80) |
-| D F&O long-short J12 K3 gross | 259 | 0.82 | 1.41 | -78.56 | 1.21 (2.19) |
-| D F&O long-short J12 K3 net | 259 | 0.68 | 1.18 | -79.15 | 1.07 (1.94) |
-| C top-500 winners hedged with NIFTY futures J12 K3 gross | 176 | 1.78 | 4.15 | -32.61 | 1.30 (3.42) |
-| C top-500 winners hedged with NIFTY futures J12 K3 net | 176 | 1.38 | 3.21 | -36.68 | 0.90 (2.36) |
-| D F&O long-short J6 K3 gross | 259 | 0.76 | 1.57 | -65.79 | 1.14 (2.36) |
-| D F&O long-short J6 K3 net | 259 | 0.59 | 1.20 | -66.23 | 0.96 (2.00) |
-| C top-500 winners hedged with NIFTY futures J6 K3 gross | 176 | 1.53 | 3.78 | -25.00 | 1.09 (3.10) |
-| C top-500 winners hedged with NIFTY futures J6 K3 net | 176 | 1.11 | 2.72 | -29.79 | 0.66 (1.88) |
 | D F&O long-short J3 K3 gross | 259 | 0.52 | 1.22 | -59.10 | 0.81 (1.96) |
 | D F&O long-short J3 K3 net | 259 | 0.29 | 0.68 | -65.50 | 0.58 (1.40) |
 | C top-500 winners hedged with NIFTY futures J3 K3 gross | 176 | 1.33 | 3.61 | -20.41 | 0.86 (2.56) |
 | C top-500 winners hedged with NIFTY futures J3 K3 net | 176 | 0.88 | 2.38 | -27.35 | 0.41 (1.21) |
+| D F&O long-short J3 K6 gross | 256 | 0.60 | 1.71 | -51.73 | 0.86 (2.50) |
+| D F&O long-short J3 K6 net | 256 | 0.47 | 1.35 | -52.24 | 0.73 (2.13) |
+| C top-500 winners hedged with NIFTY futures J3 K6 gross | 176 | 1.24 | 3.36 | -26.33 | 0.79 (2.55) |
+| C top-500 winners hedged with NIFTY futures J3 K6 net | 176 | 0.84 | 2.28 | -32.05 | 0.39 (1.27) |
+| D F&O long-short J3 K9 gross | 253 | 0.54 | 1.58 | -51.53 | 0.79 (2.50) |
+| D F&O long-short J3 K9 net | 253 | 0.44 | 1.31 | -52.07 | 0.70 (2.20) |
+| C top-500 winners hedged with NIFTY futures J3 K9 gross | 176 | 1.19 | 3.27 | -29.91 | 0.76 (2.50) |
+| C top-500 winners hedged with NIFTY futures J3 K9 net | 176 | 0.81 | 2.23 | -35.02 | 0.38 (1.25) |
+| D F&O long-short J3 K12 gross | 250 | 0.43 | 1.31 | -49.69 | 0.65 (2.10) |
+| D F&O long-short J3 K12 net | 250 | 0.35 | 1.08 | -50.70 | 0.57 (1.85) |
+| C top-500 winners hedged with NIFTY futures J3 K12 gross | 176 | 1.12 | 3.13 | -31.48 | 0.67 (2.26) |
+| C top-500 winners hedged with NIFTY futures J3 K12 net | 176 | 0.75 | 2.10 | -36.37 | 0.30 (1.01) |
+| D F&O long-short J6 K3 gross | 259 | 0.76 | 1.57 | -65.79 | 1.14 (2.36) |
+| D F&O long-short J6 K3 net | 259 | 0.59 | 1.20 | -66.23 | 0.96 (2.00) |
+| C top-500 winners hedged with NIFTY futures J6 K3 gross | 176 | 1.53 | 3.78 | -25.00 | 1.09 (3.10) |
+| C top-500 winners hedged with NIFTY futures J6 K3 net | 176 | 1.11 | 2.72 | -29.79 | 0.66 (1.88) |
+| D F&O long-short J6 K6 gross | 256 | 0.77 | 1.66 | -66.56 | 1.14 (2.62) |
+| D F&O long-short J6 K6 net | 256 | 0.65 | 1.40 | -67.05 | 1.02 (2.34) |
+| C top-500 winners hedged with NIFTY futures J6 K6 gross | 176 | 1.45 | 3.64 | -27.76 | 1.01 (2.95) |
+| C top-500 winners hedged with NIFTY futures J6 K6 net | 176 | 1.05 | 2.65 | -32.05 | 0.61 (1.80) |
+| D F&O long-short J6 K9 gross | 253 | 0.59 | 1.29 | -65.96 | 0.91 (2.17) |
+| D F&O long-short J6 K9 net | 253 | 0.50 | 1.10 | -66.73 | 0.82 (1.96) |
+| C top-500 winners hedged with NIFTY futures J6 K9 gross | 176 | 1.37 | 3.48 | -30.96 | 0.92 (2.76) |
+| C top-500 winners hedged with NIFTY futures J6 K9 net | 176 | 0.99 | 2.52 | -34.86 | 0.55 (1.64) |
+| D F&O long-short J6 K12 gross | 250 | 0.37 | 0.86 | -61.12 | 0.67 (1.70) |
+| D F&O long-short J6 K12 net | 250 | 0.30 | 0.69 | -61.89 | 0.60 (1.51) |
+| C top-500 winners hedged with NIFTY futures J6 K12 gross | 176 | 1.23 | 3.22 | -34.72 | 0.78 (2.41) |
+| C top-500 winners hedged with NIFTY futures J6 K12 net | 176 | 0.86 | 2.26 | -39.31 | 0.42 (1.28) |
+| D F&O long-short J9 K3 gross | 259 | 0.78 | 1.43 | -75.58 | 1.23 (2.42) |
+| D F&O long-short J9 K3 net | 259 | 0.63 | 1.15 | -76.05 | 1.07 (2.12) |
+| C top-500 winners hedged with NIFTY futures J9 K3 gross | 176 | 1.70 | 4.09 | -25.12 | 1.27 (3.38) |
+| C top-500 winners hedged with NIFTY futures J9 K3 net | 176 | 1.29 | 3.10 | -30.77 | 0.86 (2.28) |
+| D F&O long-short J9 K6 gross | 256 | 0.74 | 1.35 | -77.89 | 1.12 (2.26) |
+| D F&O long-short J9 K6 net | 256 | 0.63 | 1.16 | -78.50 | 1.02 (2.05) |
+| C top-500 winners hedged with NIFTY futures J9 K6 gross | 176 | 1.55 | 3.75 | -31.02 | 1.10 (3.04) |
+| C top-500 winners hedged with NIFTY futures J9 K6 net | 176 | 1.16 | 2.81 | -35.27 | 0.72 (1.98) |
+| D F&O long-short J9 K9 gross | 253 | 0.55 | 1.05 | -73.17 | 0.88 (1.86) |
+| D F&O long-short J9 K9 net | 253 | 0.47 | 0.89 | -73.80 | 0.80 (1.68) |
+| C top-500 winners hedged with NIFTY futures J9 K9 gross | 176 | 1.40 | 3.52 | -34.18 | 0.97 (2.74) |
+| C top-500 winners hedged with NIFTY futures J9 K9 net | 176 | 1.02 | 2.58 | -38.85 | 0.59 (1.68) |
+| D F&O long-short J9 K12 gross | 250 | 0.42 | 0.87 | -68.43 | 0.73 (1.67) |
+| D F&O long-short J9 K12 net | 250 | 0.35 | 0.72 | -69.28 | 0.66 (1.51) |
+| C top-500 winners hedged with NIFTY futures J9 K12 gross | 176 | 1.29 | 3.28 | -37.76 | 0.84 (2.47) |
+| C top-500 winners hedged with NIFTY futures J9 K12 net | 176 | 0.92 | 2.35 | -42.07 | 0.47 (1.39) |
+| D F&O long-short J12 K3 gross | 259 | 0.82 | 1.41 | -78.56 | 1.21 (2.19) |
+| D F&O long-short J12 K3 net | 259 | 0.68 | 1.18 | -79.15 | 1.07 (1.94) |
+| C top-500 winners hedged with NIFTY futures J12 K3 gross | 176 | 1.78 | 4.15 | -32.61 | 1.30 (3.42) |
+| C top-500 winners hedged with NIFTY futures J12 K3 net | 176 | 1.38 | 3.21 | -36.68 | 0.90 (2.36) |
+| D F&O long-short J12 K6 gross | 256 | 0.69 | 1.24 | -77.12 | 1.06 (2.05) |
+| D F&O long-short J12 K6 net | 256 | 0.59 | 1.06 | -77.68 | 0.96 (1.86) |
+| C top-500 winners hedged with NIFTY futures J12 K6 gross | 176 | 1.57 | 3.79 | -35.29 | 1.11 (3.05) |
+| C top-500 winners hedged with NIFTY futures J12 K6 net | 176 | 1.19 | 2.87 | -39.06 | 0.73 (2.00) |
+| D F&O long-short J12 K9 gross | 253 | 0.54 | 1.03 | -71.55 | 0.87 (1.80) |
+| D F&O long-short J12 K9 net | 253 | 0.46 | 0.87 | -72.39 | 0.79 (1.63) |
+| C top-500 winners hedged with NIFTY futures J12 K9 gross | 176 | 1.41 | 3.47 | -37.82 | 0.95 (2.68) |
+| C top-500 winners hedged with NIFTY futures J12 K9 net | 176 | 1.03 | 2.56 | -41.74 | 0.58 (1.63) |
+| D F&O long-short J12 K12 gross | 250 | 0.48 | 0.98 | -67.86 | 0.77 (1.71) |
+| D F&O long-short J12 K12 net | 250 | 0.41 | 0.84 | -68.68 | 0.70 (1.56) |
+| C top-500 winners hedged with NIFTY futures J12 K12 gross | 176 | 1.30 | 3.29 | -40.33 | 0.82 (2.44) |
+| C top-500 winners hedged with NIFTY futures J12 K12 net | 176 | 0.93 | 2.36 | -44.74 | 0.46 (1.35) |
 
 ## Against IIMA's Indian WML factor, 2005-01 to 2025-12
 

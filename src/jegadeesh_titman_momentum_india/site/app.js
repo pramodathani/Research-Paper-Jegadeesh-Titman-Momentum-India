@@ -333,7 +333,6 @@ function bindControls() {
       document.getElementById('copy-citation').textContent = 'Copied';
     });
   });
-  });
 }
 
 function renderSummary() {

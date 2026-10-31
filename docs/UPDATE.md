@@ -26,7 +26,7 @@ precompute (`make live tables`) is the slowest step.
 | build returns | `data/derived/daily_returns.parquet`, cut at the last complete month; DB `daily_returns` |
 | run grid | `data/derived/grid.parquet`; DB monthly returns, universes, strategy returns |
 | make results, table nine, further results | `results/*.csv`, `results/further/*.csv` |
-| make live tables | `results/live/live_tables.json`, `equal_market.csv` (the 64 specifications the page looks up) |
+| make live tables | `results/live/live_tables.json`, `equal_market.csv`: for each of the 64 specifications the deciles, size and beta groups, Section III, buy-and-hold and joint tests, plus event-time and results-day returns the page looks up |
 | make summary tables, charts | `results/summary_tables.md`, `results/charts/` |
 | build snapshot | `site/data/snapshot.json`, which the page reads |
 | build brief page | the hand-off brief |
