@@ -151,3 +151,7 @@ To view the companion page locally, run `jt-momentum-app` after installing the p
 See `CITATION.cff`. Please also cite the original paper:
 
 Jegadeesh, N., and Titman, S. (1993). Returns to Buying Winners and Selling Losers: Implications for Stock Market Efficiency. *The Journal of Finance*, 48(1), 65-91. https://doi.org/10.1111/j.1540-6261.1993.tb04702.x
+
+## Further tests from the paper
+
+`results/further/` holds the Section III profit decomposition and lead-lag test, Tables IV and VI by size, joint F tests, event-time betas, buy-and-hold portfolios, the paper's flat 0.5% cost test, alphas against an equally weighted market and the January reversal. Headline: reversing the spread every January lowers the compound return (all shares 6/6: 18.5% to 14.6% a year) and loses in 16 of 22 Januaries, because Indian momentum has no January penalty. Details are in `results/summary.md`; reviewer notes are in `results/review/further_review.md`.
