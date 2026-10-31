@@ -28,7 +28,7 @@ J = 6 months ranked, K = 6 months held, no skip, holding months January 2005 to 
 ## What the Indian data says
 
 1. **Momentum exists in India and is larger than in the paper.** All 64 winners-minus-losers strategies (two universes, with and without the skip week, four J, four K) are positive after costs; 6/6 earns 1.28% to 1.36% a month after costs.
-2. **It lives mostly in mid and small shares.** Within the 200 most traded shares 6/6 earns 0.85% a month after costs and is not significant at 5%; among the roughly 50 to 230 shares with stock futures it earns 0.65%.
+2. **It lives mostly in mid and small shares.** Within the 200 most traded shares 6/6 earns 0.85% a month after costs and is not significant at 5%; among the 52 to 218 shares with stock futures it earns 0.65%.
 3. **The short leg is the problem.** India allows only covered shorts. A 3% a year borrowing fee cuts the top-500 long-short to 1.03% a month. The tradeable versions are long-only winners and winners hedged with NIFTY futures.
 4. **Long-only winners mostly carry market risk.** Their beta is 1.18; their alpha against the IIMA market is 0.25% a month (t 1.07), and against the NIFTY 500 since 2012 0.63% a month (t 2.06), with a deeper worst drawdown (-40% against -29%).
 5. **Momentum crashes.** The top-500 long-short lost 49% in May 2009 when beaten-down losers rebounded; 2005 to 2009 earned almost nothing. From 2010 it earned 1.55% a month after costs (t 4.55) with a worst drawdown of -33%.
@@ -62,7 +62,7 @@ The full plan is in `plan/india_plan.md`.
 | NSE daily price files (bhavcopy) | 1996 to 2026 | 7,628 days, 5,723 symbols, delisted shares included |
 | NSE corporate actions | 2000 to 2026 | 41,483 records; splits and bonuses complete only from 2006 |
 | NSE symbol changes | 2003 to 2025 | 1,078 renames |
-| NSE derivatives files | 2005 to 2026 | stock futures for 52 to 232 shares |
+| NSE derivatives files | 2005 to 2026 | stock futures for 52 shares on the first day of 2005 and 218 in October 2026 |
 | NSE index files | 2012 to 2026 | NIFTY 500, NIFTY 50, momentum indices |
 | NSE results filings | 2007 to 2025 | quarterly results dates, for Table IX |
 | IIMA Indian factor library | 1993 to 2025 | market, risk-free and WML factors |
@@ -104,7 +104,7 @@ done
 .venv/bin/pytest
 ```
 
-The database steps need `RESEARCH_ANALYST_TIMESCALEDB_URL`; `build_returns` and `run_grid` accept `--skip-database` to work from files alone. The `ubi` load needs an export from UBI.
+The loading steps and `build_returns` need a TimescaleDB address in `RESEARCH_ANALYST_TIMESCALEDB_URL`; `run_grid` accepts `--skip-database` to keep its output in files only. The `ubi` load needs an export from UBI.
 
 ## Database
 
