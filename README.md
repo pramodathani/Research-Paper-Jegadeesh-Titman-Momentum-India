@@ -6,7 +6,7 @@ This study recreates the relative-strength strategies of Jegadeesh and Titman (1
 
 ![Growth of one rupee in the 6/6 portfolios](results/charts/wealth_6_6.png)
 
-The interactive companion page, where J, K and the other settings can be chosen, will be linked here once it is published.
+**Interactive companion page:** [tradingmachine.co.in/papers/jegadeesh-titman-momentum-india](https://tradingmachine.co.in/papers/jegadeesh-titman-momentum-india/), where J, K, the universe, costs and the sample can be chosen and every table and chart is recomputed.
 
 ## Headline results
 
@@ -141,6 +141,8 @@ tests/        unit tests on small made-up data, no network
 results/      tables, charts and summary
 data/         raw and intermediate data, git-ignored
 ```
+
+To view the companion page locally, run `jt-momentum-app` after installing the package, or `python -m jegadeesh_titman_momentum_india.scripts.build_snapshot` to rebuild its data.
 
 ## Citation
 
