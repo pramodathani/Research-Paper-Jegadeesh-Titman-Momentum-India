@@ -25,6 +25,7 @@ dependencies = [
     "pandas",
     "pyarrow",
     "requests",
+    "scipy",
     "statsmodels",
 ]
 

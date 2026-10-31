@@ -98,6 +98,33 @@ class StudyRunner:
             columns=self.matrices.returns.columns,
         )
 
+    def past_returns(
+        self,
+        formation_months: int,
+        skip: bool,
+    ) -> pd.DataFrame:
+        """Gives every share's return over the ranking window.
+
+        With skip, the window ends skip_days trading days before the
+        formation date and starts the same number of days before the date
+        formation_months earlier, so that the week before trading is not used.
+
+        Args:
+            formation_months (int): J, the length of the ranking window.
+            skip (bool): Whether to leave out the last trading week.
+
+        Returns:
+            pd.DataFrame: One row per month, NaN where a share has no return.
+        """
+        ends = self.formation_dates[formation_months:]
+        starts = self.formation_dates[: len(ends)]
+        if skip:
+            ends = self.matrices.shifted_dates(ends, self.skip_days)
+            starts = self.matrices.shifted_dates(starts, self.skip_days)
+        window = self.matrices.window_returns(starts, ends)
+        window.index = self.months[formation_months:]
+        return window.reindex(self.months)
+
     def deciles(
         self,
         universe: str,
@@ -106,10 +133,6 @@ class StudyRunner:
         eligible: pd.DataFrame | None = None,
     ) -> pd.DataFrame:
         """Ranks shares on their past return and gives each a decile.
-
-        With skip, the ranking window ends skip_days trading days before the
-        formation date and starts the same number of days before the date
-        formation_months earlier, so that the week before trading is not used.
 
         Args:
             universe (str): U1 or U2.
@@ -121,14 +144,7 @@ class StudyRunner:
         Returns:
             pd.DataFrame: Deciles 1 to 10, one row per month.
         """
-        ends = self.formation_dates[formation_months:]
-        starts = self.formation_dates[: len(ends)]
-        if skip:
-            ends = self.matrices.shifted_dates(ends, self.skip_days)
-            starts = self.matrices.shifted_dates(starts, self.skip_days)
-        window = self.matrices.window_returns(starts, ends)
-        window.index = self.months[formation_months:]
-        window = window.reindex(self.months)
+        window = self.past_returns(formation_months, skip)
         if eligible is None:
             eligible = self.universes[universe]
         return DecileRanker().rank(window, eligible)
