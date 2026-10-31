@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 import psycopg
 
+from jegadeesh_titman_momentum_india.momentum.study_period import (
+    StudyPeriod,
+)
 from jegadeesh_titman_momentum_india.data.timescale_store import (
     TimescaleStore,
 )
@@ -30,7 +33,7 @@ from jegadeesh_titman_momentum_india.momentum.strategy_summary import (
 from jegadeesh_titman_momentum_india.momentum.study_runner import StudyRunner
 
 START = pd.Period('2005-01', freq='M')
-END = pd.Period('2026-10', freq='M')
+END = pd.Period(StudyPeriod.end(), freq='M')
 
 
 class MakeFurtherResultsApplication:
@@ -92,7 +95,7 @@ class MakeFurtherResultsApplication:
             series (pd.Series): Monthly values by month period.
 
         Returns:
-            pd.Series: The values from January 2005 to October 2026.
+            pd.Series: The values from January 2005 to the last complete month.
         """
         return series.dropna().loc[START:END]
 
@@ -105,7 +108,7 @@ class MakeFurtherResultsApplication:
         summaries = []
         decompositions = []
         lead_lags = []
-        start = '2004-07'
+        start = '2004-01'
         past = self.runner.past_returns(6, False)
         for universe in ('U1', 'U2'):
             sources = ProfitSources(
@@ -171,7 +174,7 @@ class MakeFurtherResultsApplication:
             self.market_excess,
             self.risk_free,
             '2005-01',
-            '2026-10',
+            str(END),
         )
         frames = paper.decile_frames()
         calendar = CalendarMonthTable()
@@ -182,7 +185,7 @@ class MakeFurtherResultsApplication:
             ('2005-01', '2009-12'),
             ('2010-01', '2014-12'),
             ('2015-01', '2019-12'),
-            ('2020-01', '2026-10'),
+            ('2020-01', str(END)),
         ]
         for name in self.SIZE_GROUPS:
             series = self._main(frames[name]['10-1'])
@@ -275,7 +278,7 @@ class MakeFurtherResultsApplication:
                         (universe, False, formation, holding, 'long_short'),
                         'gross',
                         '2005-01',
-                        '2026-10',
+                        str(END),
                     )
                     held = statistics.summarize(spread)
                     rows.append(
@@ -306,13 +309,13 @@ class MakeFurtherResultsApplication:
                 for holding in (3, 6, 9, 12):
                     keys = (universe, False, formation, holding)
                     gross = self.tables.series(
-                        keys + ('long_short',), 'gross', '2005-01', '2026-10'
+                        keys + ('long_short',), 'gross', '2005-01', str(END)
                     )
                     buy = self.tables.series(
-                        keys + ('buy',), 'turnover', '2005-01', '2026-10'
+                        keys + ('buy',), 'turnover', '2005-01', str(END)
                     )
                     sell = self.tables.series(
-                        keys + ('sell',), 'turnover', '2005-01', '2026-10'
+                        keys + ('sell',), 'turnover', '2005-01', str(END)
                     )
                     cost = 0.005 * (buy + sell).reindex(gross.index)
                     net = gross - cost
@@ -352,7 +355,7 @@ class MakeFurtherResultsApplication:
         for universe in ('U1', 'U2'):
             for leg in ('long_short', 'buy', 'sell'):
                 series = self.tables.series(
-                    (universe, False, 6, 6, leg), 'gross', '2005-01', '2026-10'
+                    (universe, False, 6, 6, leg), 'gross', '2005-01', str(END)
                 )
                 for name, market in (
                     ('value weighted (IIMA)', self.market_excess),
@@ -390,7 +393,7 @@ class MakeFurtherResultsApplication:
                     (universe, False, formation, holding, 'long_short'),
                     'gross',
                     '2005-01',
-                    '2026-10',
+                    str(END),
                 )
                 reversed_series = series.where(series.index.month != 1, -series)
                 januaries = series[series.index.month == 1]

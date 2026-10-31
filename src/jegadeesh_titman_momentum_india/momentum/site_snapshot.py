@@ -3,11 +3,16 @@
 import datetime
 import json
 import math
+import os
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
+
+from jegadeesh_titman_momentum_india.momentum.study_period import (
+    StudyPeriod,
+)
 from jegadeesh_titman_momentum_india.momentum.study_runner import StudyRunner
 
 
@@ -31,7 +36,7 @@ class SiteSnapshot:
         grid: pd.DataFrame,
         results: Path,
         first_month: str = '1997-01',
-        last_month: str = '2026-10',
+        last_month: str | None = None,
     ) -> None:
         """Keeps the inputs.
 
@@ -47,7 +52,9 @@ class SiteSnapshot:
         self.grid = grid.copy()
         self.grid['period'] = self.grid['month'].dt.to_period('M')
         self.results = results
-        self.months = pd.period_range(first_month, last_month, freq='M')
+        self.months = pd.period_range(
+            first_month, last_month or StudyPeriod.end(), freq='M'
+        )
 
     def _encode(self, series: pd.Series) -> list[int | None]:
         """Turns a monthly series into integers aligned with the months.
@@ -141,7 +148,12 @@ class SiteSnapshot:
         )
         nifty.index = pd.PeriodIndex(nifty.index, freq='M')
         risk_free = market['risk_free'].reindex(self.months).ffill()
+        equal = pd.read_csv(
+            self.results / 'live' / 'equal_market.csv', index_col=0
+        ).iloc[:, 0]
+        equal.index = pd.PeriodIndex(equal.index, freq='M')
         return {
+            'equal_market': self._encode(equal),
             'market': self._encode(market['market_return']),
             'rf': self._encode(risk_free),
             'wml': self._encode(market['wml']),
@@ -227,6 +239,49 @@ class SiteSnapshot:
         }
         return tables
 
+    def iima_end(self) -> str:
+        """Gives the month name when the market factor series ends.
+
+        Returns:
+            str: Such as December 2025.
+        """
+        market = pd.read_csv(self.results / 'market_monthly.csv', index_col=0)
+        market.index = pd.PeriodIndex(market.index, freq='M')
+        last = market['market_return'].dropna().index.max()
+        return last.strftime('%B %Y')
+
+    def prose(self) -> dict[str, str]:
+        """Gives the dates and counts the page's text quotes.
+
+        Returns:
+            dict[str, str]: The last month, the last data date, and the
+                numbers of trading days and symbols in the price files.
+        """
+        import psycopg
+
+        from jegadeesh_titman_momentum_india.data.timescale_store import (
+            TimescaleStore,
+        )
+
+        connection = psycopg.connect(
+            os.environ['RESEARCH_ANALYST_TIMESCALEDB_URL']
+        )
+        days, symbols = connection.execute(
+            'SELECT count(DISTINCT date), count(DISTINCT symbol) FROM '
+            f'{TimescaleStore.SCHEMA}.daily_prices_raw'
+        ).fetchone()
+        daily = pd.read_parquet(
+            'data/derived/daily_returns.parquet', columns=['date']
+        )
+        last = pd.to_datetime(daily['date']).max()
+        return {
+            'end_label': self.months[-1].strftime('%B %Y'),
+            'data_to': f'{last.day} {last:%B %Y}',
+            'iima_end': self.iima_end(),
+            'trading_days': f'{days:,}',
+            'symbols': f'{symbols:,}',
+        }
+
     def build(self) -> dict[str, Any]:
         """Builds the whole snapshot.
 
@@ -242,7 +297,11 @@ class SiteSnapshot:
             'series': self.series(),
             'benchmarks': self.market(),
             'extensions': self.extensions(),
+            'prose': self.prose(),
             'tables': self.tables(),
+            'live': json.loads(
+                (self.results / 'live' / 'live_tables.json').read_text()
+            ),
         }
 
     def write(self, folder: Path) -> Path:

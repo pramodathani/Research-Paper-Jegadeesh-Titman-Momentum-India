@@ -8,6 +8,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from jegadeesh_titman_momentum_india.momentum.study_period import (
+    StudyPeriod,
+)
+
 BLUE = '#4285F4'
 RED = '#EA4335'
 YELLOW = '#FBBC05'
@@ -115,7 +119,7 @@ class MakeChartsApplication:
         axis.set_yscale('log')
         axis.set_ylabel('Growth of one rupee (log scale)')
         axis.set_title(
-            'J = 6, K = 6 momentum portfolios on NSE shares, 2005 to 2026',
+            f'J = 6, K = 6 momentum portfolios on NSE shares, 2005 to {StudyPeriod.end()[:4]}',
             fontsize=11,
         )
         axis.grid(True, color='#E8EAED')
@@ -136,7 +140,7 @@ class MakeChartsApplication:
         Returns:
             None.
         """
-        table = pd.read_csv(results / 'table1_main_2005_2026.csv')
+        table = pd.read_csv(results / 'table1_main.csv')
         figure, axes = plt.subplots(1, 2, figsize=(10, 4))
         for axis, universe in zip(axes, ('U1', 'U2')):
             rows = table[

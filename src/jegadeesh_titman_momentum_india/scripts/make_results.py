@@ -7,6 +7,9 @@ from pathlib import Path
 import pandas as pd
 import psycopg
 
+from jegadeesh_titman_momentum_india.momentum.study_period import (
+    StudyPeriod,
+)
 from jegadeesh_titman_momentum_india.data.timescale_store import (
     TimescaleStore,
 )
@@ -29,7 +32,7 @@ from jegadeesh_titman_momentum_india.momentum.strategy_summary import (
 from jegadeesh_titman_momentum_india.momentum.study_runner import StudyRunner
 
 START = '2005-01'
-END = '2026-10'
+END = StudyPeriod.end()
 NIFTY_500 = ('S&P CNX 500', 'CNX 500', 'Nifty 500')
 NIFTY_50 = ('S&P CNX Nifty', 'CNX Nifty', 'Nifty 50')
 MOMENTUM_30 = ('Nifty200 Momentum 30',)
@@ -118,7 +121,7 @@ class MakeResultsApplication:
         """
         tables = GridTables(grid, self.market_excess, self.risk_free)
         tables.table_one(START, END).to_csv(
-            self.out / 'table1_main_2005_2026.csv', index=False
+            self.out / 'table1_main.csv', index=False
         )
         tables.table_one('1997-01', '2004-12').to_csv(
             self.out / 'table1_extension_1997_2004.csv', index=False
@@ -134,7 +137,7 @@ class MakeResultsApplication:
                 ('2005-01', '2009-12'),
                 ('2010-01', '2014-12'),
                 ('2015-01', '2019-12'),
-                ('2020-01', '2026-10'),
+                ('2020-01', END),
             ]
             for leg in ('long_short', 'buy'):
                 keys = (universe, False, 6, 6, leg)

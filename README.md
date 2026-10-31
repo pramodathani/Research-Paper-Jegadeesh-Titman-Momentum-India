@@ -155,3 +155,7 @@ Jegadeesh, N., and Titman, S. (1993). Returns to Buying Winners and Selling Lose
 ## Further tests from the paper
 
 `results/further/` holds the Section III profit decomposition and lead-lag test, Tables IV and VI by size, joint F tests, event-time betas, buy-and-hold portfolios, the paper's flat 0.5% cost test, alphas against an equally weighted market and the January reversal. Headline: reversing the spread every January lowers the compound return (all shares 6/6: 18.5% to 14.6% a year) and loses in 16 of 22 Januaries, because Indian momentum has no January penalty. Details are in `results/summary.md`; reviewer notes are in `results/review/further_review.md`.
+
+## Updating with new data
+
+Run `python -m jegadeesh_titman_momentum_india.scripts.update_study` to download new NSE files, reload the database and rebuild every result, the page's data and the hand-off brief up to the last complete month; see `docs/UPDATE.md`. The page's tables are live in J, K, gap and universe: Tables 9 to 14 use the monthly series in the snapshot or the 64 specifications precomputed by `scripts/make_live_tables.py`.

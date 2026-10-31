@@ -4,6 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from jegadeesh_titman_momentum_india.momentum.study_period import (
+    StudyPeriod,
+)
+
 PAPER_TABLE_ONE = {
     3: {
         'Sell': [0.0108, 0.0091, 0.0092, 0.0087],
@@ -47,7 +51,7 @@ class MakeSummaryTablesApplication:
                 'Newey-West errors unless marked plain.\n'
             ),
         ]
-        table_one = pd.read_csv(results / 'table1_main_2005_2026.csv')
+        table_one = pd.read_csv(results / 'table1_main.csv')
         for universe in ('U1', 'U2'):
             for skip in (False, True):
                 parts.append(self._table_one(table_one, universe, skip))
@@ -98,7 +102,7 @@ class MakeSummaryTablesApplication:
         name = 'all shares (U1)' if universe == 'U1' else 'top 500 (U2)'
         panel = 'B, one-week skip' if skip else 'A, no skip'
         lines = [
-            f'## Table I, {name}, panel {panel}, 2005-01 to 2026-10\n',
+            f'## Table I, {name}, panel {panel}, 2005-01 to {StudyPeriod.end()}\n',
             'Each cell: gross mean (Newey-West t) / net mean (Newey-West t).\n',
             '| J | Portfolio | K = 3 | K = 6 | K = 9 | K = 12 |',
             '|---|---|---|---|---|---|',
@@ -189,7 +193,7 @@ class MakeSummaryTablesApplication:
             str: Markdown.
         """
         lines = [
-            '## Table II, 6/6 deciles: beta and size, 2005 to 2026\n',
+            f'## Table II, 6/6 deciles: beta and size, 2005 to {StudyPeriod.end()[:4]}\n',
             (
                 'Beta against the IIMA market excess return; size is the average '
                 'median daily traded value of members at formation, in rupees '
@@ -283,7 +287,7 @@ class MakeSummaryTablesApplication:
             'Dec',
         ]
         lines = [
-            '## Tables IV and V, 6/6 winners minus losers by calendar month, gross, 2005 to 2026\n',
+            f'## Tables IV and V, 6/6 winners minus losers by calendar month, gross, 2005 to {StudyPeriod.end()[:4]}\n',
             '| Month | U1 mean (plain t) | U1 share positive | U2 mean (plain t) | U2 share positive |',
             '|---|---|---|---|---|',
         ]
@@ -345,7 +349,7 @@ class MakeSummaryTablesApplication:
             str: Markdown.
         """
         lines = [
-            '## Table VII, 6-month winners minus losers in event time, formations 2005 to 2026\n',
+            f'## Table VII, 6-month winners minus losers in event time, formations 2005 to {StudyPeriod.end()[:4]}\n',
             '| Month after formation | U1 monthly (t) | U1 cumulative (NW t) | U2 monthly (t) | U2 cumulative (NW t) |',
             '|---|---|---|---|---|',
         ]
@@ -410,7 +414,7 @@ class MakeSummaryTablesApplication:
             & (table['leg'] != 'sell')
         ]
         lines = [
-            '## Robustness, 6/6, 2005 to 2026\n',
+            f'## Robustness, 6/6, 2005 to {StudyPeriod.end()[:4]}\n',
             '| Check | Universe | Portfolio | Gross (NW t) | Net (NW t) |',
             '|---|---|---|---|---|',
         ]

@@ -5,6 +5,9 @@ from data_and_analytics.backtesting.return_statistics import (
     ReturnStatistics,
 )
 
+from jegadeesh_titman_momentum_india.momentum.study_period import (
+    StudyPeriod,
+)
 from jegadeesh_titman_momentum_india.momentum.event_time_returns import (
     EventTimeReturns,
 )
@@ -30,7 +33,7 @@ class PaperTables:
         market_excess: pd.Series,
         risk_free: pd.Series,
         start: str = '2005-01',
-        end: str = '2026-10',
+        end: str | None = None,
     ) -> None:
         """Keeps the runner and the market series.
 
@@ -48,7 +51,7 @@ class PaperTables:
         self.market_excess = market_excess
         self.risk_free = risk_free
         self.start = pd.Period(start)
-        self.end = pd.Period(end)
+        self.end = pd.Period(end or StudyPeriod.end())
         self.statistics = ReturnStatistics()
         self.groups = GroupedDecileRuns(runner)
 

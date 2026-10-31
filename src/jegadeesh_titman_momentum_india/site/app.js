@@ -47,7 +47,8 @@ const state = {
   impact: 0.10,
   brokerage: 0,
   fee: 0,
-  sample: '2005-01|2026-10',
+  flat: 0.5,
+  sample: '2005-01|2026-10', // replaced by the snapshot's last month on load
   impactTouched: false,
   decileUniverse: 'U2',
 };
@@ -152,7 +153,7 @@ function neweyWestT(values) {
   return average / Math.sqrt(variance);
 }
 
-function statistics(values, indices, leg) {
+function statistics(values, indices, leg, marketKey = 'market') {
   const months = [];
   const picked = [];
   indices.forEach((index) => {
@@ -188,7 +189,7 @@ function statistics(values, indices, leg) {
     worstMonth: Math.min(...picked),
     positive: picked.filter((value) => value > 0).length / count,
   };
-  const market = decode(snapshot.benchmarks.market);
+  const market = decode(snapshot.benchmarks[marketKey]);
   const riskFree = decode(snapshot.benchmarks.rf);
   const xs = [];
   const ys = [];
@@ -243,6 +244,7 @@ function readHash() {
       state.impactTouched = true;
     } else if (/^brokerage[\d.]+$/.test(part)) state.brokerage = Number(part.slice(9));
     else if (/^fee[\d.]+$/.test(part)) state.fee = Number(part.slice(3));
+    else if (/^flat[\d.]+$/.test(part)) state.flat = Number(part.slice(4));
     else if (/^from\d{4}\.\d{2}to\d{4}\.\d{2}$/.test(part)) {
       const start = part.slice(4, 11).replace('.', '-');
       const end = part.slice(13).replace('.', '-');
@@ -269,7 +271,8 @@ function writeHash() {
   if (state.impactTouched) parts.push(`impact${state.impact}`);
   if (state.brokerage) parts.push(`brokerage${state.brokerage}`);
   if (state.fee) parts.push(`fee${state.fee}`);
-  if (state.sample !== '2005-01|2026-10') {
+  if (state.flat !== 0.5) parts.push(`flat${state.flat}`);
+  if (state.sample !== defaultSample()) {
     parts.push(`from${start.replace('-', '.')}to${end.replace('-', '.')}`);
   }
   const hash = `#${parts.join('-')}`;
@@ -288,6 +291,7 @@ function syncControls() {
   document.getElementById('control-impact').value = Number(state.impact).toFixed(2);
   document.getElementById('control-brokerage').value = Number(state.brokerage).toFixed(2);
   document.getElementById('control-fee').value = String(state.fee);
+  document.getElementById('control-flat').value = String(state.flat);
   const sample = document.getElementById('control-sample');
   if ([...sample.options].some((option) => option.value === state.sample)) {
     sample.value = state.sample;
@@ -318,6 +322,7 @@ function bindControls() {
   });
   bind('control-brokerage', (value) => { state.brokerage = Math.max(0, Number(value) || 0); });
   bind('control-fee', (value) => { state.fee = Math.max(0, Number(value) || 0); });
+  bind('control-flat', (value) => { state.flat = Math.max(0, Number(value) || 0); });
   bind('control-sample', (value) => { state.sample = value; });
   window.addEventListener('hashchange', () => {
     readHash();
@@ -648,71 +653,167 @@ function renderRobustness() {
   document.getElementById('table-robustness').innerHTML = `${html}</tbody>`;
 }
 
-function renderFurther() {
-  const further = snapshot.tables.further;
-  if (!further) {
-    return;
-  }
-  const name = { U1: 'All shares', U2: 'Top 500' };
+function mainIndices() {
+  const indices = [];
+  snapshot.months.forEach((month, index) => {
+    if (month >= snapshot.main_sample[0] && month <= snapshot.main_sample[1]) {
+      indices.push(index);
+    }
+  });
+  return indices;
+}
+
+function renderFurther(indices) {
+  const universeName = state.universe === 'U1' ? 'All shares' : 'Top 500';
+  const cells = [3, 6, 9, 12];
+  const live = snapshot.live;
   const pct = (value, places = 2) => (Number.isFinite(value) ? (value * 100).toFixed(places) : '');
   const num = (value, places = 2) => (Number.isFinite(value) ? value.toFixed(places) : '');
-  const pv = (value) => (value < 0.001 ? '<0.001' : value.toFixed(3));
+  const pv = (value) => (!Number.isFinite(value) ? '' : value < 0.001 ? '<0.001' : value.toFixed(3));
   const fill = (id, html) => {
     document.getElementById(id).innerHTML = html;
   };
+  const mark = (j, k) => (j === state.j && k === state.k ? ' class="highlight"' : '');
+  const costs = state.costs;
 
-  let html = '<thead><tr><th>Universe</th><th>J/K</th><th>Normal, % a month</th><th>Reversed, % a month</th><th>Normal, % a year</th><th>Reversed, % a year</th><th>Average January spread, %</th><th>Reversal loses / gains</th><th><i>t</i></th></tr></thead><tbody>';
-  further.january_reversal.forEach((r) => {
-    html += `<tr><th>${name[r.universe]}</th><td>${r.formation_months}/${r.holding_months}</td><td>${pct(r.normal_mean)}</td><td>${pct(r.reversed_mean)}</td><td>${pct(r.normal_compound_annual, 1)}</td><td>${pct(r.reversed_compound_annual, 1)}</td><td>${pct(r.average_january_spread)}</td><td>${r.januaries_where_reversal_loses} / ${r.januaries_where_reversal_gains}</td><td>${num(r.january_reversal_t)}</td></tr>`;
+  // Table 9: January reversal at every J and K.
+  let html = '<thead><tr><th>J/K</th><th>Normal, % a month</th><th>Reversed, % a month</th><th>Normal, % a year</th><th>Reversed, % a year</th><th>Average January spread, %</th><th>Reversal loses / gains</th><th><i>t</i></th></tr></thead><tbody>';
+  cells.forEach((j) => {
+    cells.forEach((k) => {
+      const series = returns(state.universe, state.skip, j, k, 'long_short', costs);
+      const flipped = series.map((value, index) => (value !== null && snapshot.months[index].endsWith('-01') ? -value : value));
+      const januaries = [];
+      indices.forEach((index) => {
+        if (series[index] !== null && snapshot.months[index].endsWith('-01')) {
+          januaries.push(-series[index]);
+        }
+      });
+      const normal = statistics(series, indices, 'long_short');
+      const changed = statistics(flipped, indices, 'long_short');
+      const average = mean(januaries);
+      const spread = Math.sqrt(januaries.reduce((total, value) => total + (value - average) ** 2, 0) / (januaries.length - 1));
+      const t = average / (spread / Math.sqrt(januaries.length));
+      html += `<tr${mark(j, k)}><th>${j}/${k}</th><td>${pct(normal.mean)}</td><td>${pct(changed.mean)}</td><td>${pct(normal.cagr, 1)}</td><td>${pct(changed.cagr, 1)}</td><td>${pct(-average)}</td><td>${januaries.filter((value) => value < 0).length} / ${januaries.filter((value) => value > 0).length}</td><td>${num(t)}</td></tr>`;
+    });
   });
   fill('table-january', `${html}</tbody>`);
 
-  html = '<thead><tr><th>Panel A</th><th>Universe</th><th>Mean, % a month</th><th>NW <i>t</i></th><th>Correlation</th></tr></thead><tbody>';
-  further.section3_profit_summary.forEach((r) => {
-    html += `<tr><th>${r.series}</th><td>${name[r.universe]}</td><td>${pct(r.mean)}</td><td>${num(r.t_newey_west)}</td><td>${num(r.correlation_with_other)}</td></tr>`;
+  // Table 10: Section III, looked up.
+  const entry = live[`${state.universe}|${state.skip}|${state.j}|${state.k}`];
+  const three = entry.section3;
+  html = `<thead><tr><th>Panel A. ${universeName}, ${state.j}/${state.k}${state.skip ? ', one-week gap' : ''}</th><th>Months</th><th>Mean, % per ${state.k} months</th><th>NW <i>t</i></th></tr></thead><tbody>`;
+  [['wrss', 'Weighted relative strength strategy'], ['deciles', 'Decile winners minus losers']].forEach(([name, label]) => {
+    const row = three.series[name];
+    html += `<tr><th>${label}</th><td>${row.months}</td><td>${pct(row.mean)}</td><td>${num(row.t)}</td></tr>`;
   });
-  html += '</tbody><thead><tr><th>Panel B</th><th>Universe</th><th>Total</th><th>Dispersion</th><th>Factor</th><th>Idiosyncratic</th></tr></thead><tbody>';
-  further.section3_decomposition.forEach((r) => {
-    const trimmed = String(r.note).startsWith('shares');
-    html += `<tr><th>${trimmed ? 'Extreme shares dropped' : 'As built'}</th><td>${name[r.universe]}</td><td>${(r.total * 100).toFixed(2)}</td><td>${(r.dispersion * 100).toFixed(2)}</td><td>${(r.factor * 100).toFixed(2)}</td><td>${(r.idiosyncratic * 100).toFixed(2)}</td></tr>`;
+  html += `<tr><th>Correlation of the two</th><td></td><td>${num(three.correlation)}</td><td></td></tr>`;
+  html += '</tbody><thead><tr><th>Panel B</th><th>Total</th><th>Dispersion</th><th>Factor</th><th>Idiosyncratic</th></tr></thead><tbody>';
+  three.decomposition.forEach((row) => {
+    html += `<tr><th>${row.label}</th><td>${pct(row.total)}</td><td>${pct(row.dispersion)}</td><td>${pct(row.factor)}</td><td>${pct(row.idiosyncratic)}</td></tr>`;
   });
-  html += '</tbody><thead><tr><th>Panel C</th><th>Universe</th><th>Sample</th><th>&theta;</th><th><i>t</i></th></tr></thead><tbody>';
-  further.section3_lead_lag.forEach((r) => {
-    html += `<tr><th>${r.series}</th><td>${name[r.universe]}</td><td>${r.sample}</td><td>${num(r.theta)}</td><td>${num(r.t)}</td></tr>`;
+  html += '</tbody><thead><tr><th>Panel C</th><th>Sample</th><th>&theta;</th><th><i>t</i></th></tr></thead><tbody>';
+  [['wrss', 'Weighted relative strength'], ['deciles', 'Decile spread']].forEach(([name, label]) => {
+    three.series[name].lead_lag.forEach((part) => {
+      html += `<tr><th>${label}</th><td>${part.sample}</td><td>${num(part.theta)}</td><td>${num(part.t)}</td></tr>`;
+    });
   });
   fill('table-section3', `${html}</tbody>`);
 
-  html = '<thead><tr><th>J/K</th><th>All shares, % a month</th><th>All shares, alpha a year (<i>t</i>)</th><th>Top 500, % a month</th><th>Top 500, alpha a year (<i>t</i>)</th></tr></thead><tbody>';
-  const flat = further.flat_cost_test;
-  flat.filter((r) => r.universe === 'U1').forEach((a) => {
-    const b = flat.find((r) => r.universe === 'U2' && r.formation_months === a.formation_months && r.holding_months === a.holding_months);
-    html += `<tr><th>${a.formation_months}/${a.holding_months}</th><td>${pct(a.after_half_percent_mean)}</td>${cell(a.after_half_percent_alpha_annual, a.after_half_percent_alpha_t)}<td>${pct(b.after_half_percent_mean)}</td>${cell(b.after_half_percent_alpha_annual, b.after_half_percent_alpha_t)}</tr>`;
+  // Table 11: flat charge on every side.
+  html = '<thead><tr><th>J/K</th><th>Before the charge, % a month</th><th>After the charge, % a month</th><th>Alpha a year, % (<i>t</i>)</th></tr></thead><tbody>';
+  cells.forEach((j) => {
+    cells.forEach((k) => {
+      const gross = returns(state.universe, state.skip, j, k, 'long_short', 'gross');
+      const traded = turnover(state.universe, state.skip, j, k, 'long_short');
+      const net = gross.map((value, index) => (value === null ? null : value - (state.flat / 100) * (traded[index] || 0)));
+      const before = statistics(gross, indices, 'long_short');
+      const after = statistics(net, indices, 'long_short');
+      html += `<tr${mark(j, k)}><th>${j}/${k}</th><td>${pct(before.mean)}</td><td>${pct(after.mean)}</td>${cell(after.alpha * 12, after.alphaT)}</tr>`;
+    });
   });
   fill('table-flat', `${html}</tbody>`);
 
-  html = '<thead><tr><th>Universe</th><th>Portfolio</th><th>Market</th><th>Alpha, % a month</th><th>Beta</th></tr></thead><tbody>';
-  further.alpha_by_market_weighting.forEach((r) => {
-    html += `<tr><th>${name[r.universe]}</th><td>${r.portfolio.replace('_', '-')}</td><td>${r.market}</td>${cell(r.alpha, r.alpha_t)}<td>${num(r.beta)}</td></tr>`;
+  // Table 12: alphas against two markets for the chosen strategy.
+  html = '<thead><tr><th>Portfolio</th><th>Market</th><th>Alpha, % a month (<i>t</i>)</th><th>Beta</th></tr></thead><tbody>';
+  ['long_short', 'buy', 'sell'].forEach((leg) => {
+    const series = returns(state.universe, state.skip, state.j, state.k, leg, costs);
+    [['market', 'Value weighted (IIMA)'], ['equal_market', 'Equally weighted (all shares)']].forEach(([key, label]) => {
+      const result = statistics(series, indices, leg, key);
+      html += `<tr><th>${LEG_NAMES[leg]}</th><td>${label}</td>${cell(result.alpha, result.alphaT)}<td>${num(result.beta)}</td></tr>`;
+    });
   });
   fill('table-alpha', `${html}</tbody>`);
 
-  html = '<thead><tr><th>J/K</th><th>All shares, held</th><th>All shares, rebalanced</th><th>Top 500, held</th><th>Top 500, rebalanced</th></tr></thead><tbody>';
-  const hold = further.buy_and_hold_vs_rebalanced;
-  hold.filter((r) => r.universe === 'U1').forEach((a) => {
-    const b = hold.find((r) => r.universe === 'U2' && r.formation_months === a.formation_months && r.holding_months === a.holding_months);
-    html += `<tr><th>${a.formation_months}/${a.holding_months}</th>${cell(a.buy_and_hold_mean, a.buy_and_hold_nw_t)}<td>${pct(a.rebalanced_mean)}</td>${cell(b.buy_and_hold_mean, b.buy_and_hold_nw_t)}<td>${pct(b.rebalanced_mean)}</td></tr>`;
+  // Table 13: buy-and-hold against rebalanced, main sample.
+  const main = mainIndices();
+  html = '<thead><tr><th>J/K</th><th>Bought and held, % a month (<i>t</i>)</th><th>Rebalanced, % a month (<i>t</i>)</th></tr></thead><tbody>';
+  cells.forEach((j) => {
+    cells.forEach((k) => {
+      const held = live[`${state.universe}|${state.skip}|${j}|${k}`].hold;
+      const rebalanced = statistics(returns(state.universe, state.skip, j, k, 'long_short', 'gross'), main, 'long_short');
+      html += `<tr${mark(j, k)}><th>${j}/${k}</th>${cell(held.mean, held.t)}${cell(rebalanced.mean, rebalanced.neweyWestT)}</tr>`;
+    });
   });
   fill('table-hold', `${html}</tbody>`);
 
-  html = '<thead><tr><th>Group</th><th>Equal returns, F (<i>p</i>)</th><th>Zero alphas, F (<i>p</i>)</th></tr></thead><tbody>';
-  further.table3_joint_tests.forEach((r) => {
-    html += `<tr><th>${r.group}</th><td>${num(r.equal_returns_f)} (${pv(r.equal_returns_p)})</td><td>${num(r.zero_alphas_f)} (${pv(r.zero_alphas_p)})</td></tr>`;
-  });
-  html += '</tbody><thead><tr><th>Size group</th><th>All months, F (<i>p</i>)</th><th>February to December, F (<i>p</i>)</th></tr></thead><tbody>';
-  further.table4_by_size_ftests.forEach((r) => {
-    html += `<tr><th>${r.group}</th><td>${num(r.all_months_f)} (${pv(r.all_months_p)})</td><td>${num(r.feb_dec_f)} (${pv(r.feb_dec_p)})</td></tr>`;
+  // Table 14: joint tests, looked up.
+  html = `<thead><tr><th>${universeName}, ${state.j}/${state.k}${state.skip ? ', one-week gap' : ''}</th><th>Equal returns, F (<i>p</i>)</th><th>Zero alphas, F (<i>p</i>)</th><th>Same in every month, F (<i>p</i>)</th><th>Same, February to December, F (<i>p</i>)</th></tr></thead><tbody>`;
+  const show = (pair) => `${num(pair[0])} (${pv(pair[1])})`;
+  Object.entries(entry.joint).forEach(([group, row]) => {
+    html += `<tr><th>${group}</th><td>${show(row.equal)}</td><td>${show(row.alpha)}</td><td>${show(row.calendar)}</td><td>${show(row.calendar_feb_dec)}</td></tr>`;
   });
   fill('table-joint', `${html}</tbody>`);
+}
+
+function defaultSample() {
+  return `${snapshot.main_sample[0]}|${snapshot.main_sample[1]}`;
+}
+
+function fillProse() {
+  const end = snapshot.main_sample[1];
+  const endYear = end.slice(0, 4);
+  const fixed = (key, leg) => decode(snapshot.series[`${key}|${leg}`].g);
+  const netFixed = (key, leg) => decode(snapshot.series[`${key}|${leg}`].n);
+  const main = mainIndices();
+  const gross = statistics(fixed('U2|0|6|6', 'long_short'), main, 'long_short');
+  const net = statistics(netFixed('U2|0|6|6', 'long_short'), main, 'long_short');
+  const all = statistics(netFixed('U1|0|6|6', 'long_short'), main, 'long_short');
+  const values = {
+    end_label: snapshot.prose.end_label,
+    end_year: endYear,
+    iima_end: snapshot.prose.iima_end,
+    data_to: snapshot.prose.data_to,
+    months: String(main.length),
+    trading_days: snapshot.prose.trading_days,
+    symbols: snapshot.prose.symbols,
+    u2_gross: (gross.mean * 100).toFixed(2),
+    u2_net: (net.mean * 100).toFixed(2),
+    u2_t: net.neweyWestT.toFixed(2),
+    u1_net: (all.mean * 100).toFixed(2),
+  };
+  document.querySelectorAll('[data-fill]').forEach((node) => {
+    const value = values[node.dataset.fill];
+    if (value !== undefined) {
+      node.textContent = value;
+    }
+  });
+  const sample = document.getElementById('control-sample');
+  const first = snapshot.main_sample[0];
+  const monthsInSample = snapshot.months.filter((month) => month >= first && month <= end);
+  const middle = Math.floor(monthsInSample.length / 2);
+  const label = (month) => month.slice(0, 4);
+  [...sample.options].forEach((option) => {
+    if (option.dataset.half === 'first') {
+      option.value = `${first}|${monthsInSample[middle - 1]}`;
+      option.textContent = `${label(first)} to ${label(monthsInSample[middle - 1])} (first half)`;
+    } else if (option.dataset.half === 'second') {
+      option.value = `${monthsInSample[middle]}|${end}`;
+      option.textContent = `${label(monthsInSample[middle])} to ${endYear} (second half)`;
+    } else {
+      option.value = option.value.replace('2026-10', end);
+      option.textContent = option.textContent.replace('2026', endYear);
+    }
+  });
 }
 
 function update() {
@@ -725,12 +826,15 @@ function update() {
   renderDrawdown(indices);
   renderGrid(indices);
   renderCalendar(indices);
+  renderFurther(indices);
 }
 
 async function start() {
   const response = await fetch('data/snapshot.json');
   snapshot = await response.json();
   document.getElementById('generated').textContent = snapshot.generated;
+  state.sample = defaultSample();
+  fillProse();
   state.impact = defaultImpact(state.universe) * 100;
   readHash();
   bindControls();
@@ -740,7 +844,6 @@ async function start() {
   renderEvent();
   renderTradeable();
   renderRobustness();
-  renderFurther();
   update();
   window.addEventListener('resize', () => Object.values(charts).forEach((item) => item.resize()));
 }

@@ -102,6 +102,7 @@ class GroupedDecileRuns:
         formation_months: int = 6,
         holding_months: int = 6,
         universe: str = 'U1',
+        skip: bool = False,
     ) -> pd.DataFrame:
         """Runs all ten deciles for one group.
 
@@ -112,6 +113,7 @@ class GroupedDecileRuns:
             formation_months (int): J.
             holding_months (int): K.
             universe (str): The universe to rank, U1 or U2.
+            skip (bool): Whether to leave out the last trading week.
 
         Returns:
             pd.DataFrame: Gross monthly returns, one column per decile 1 to
@@ -121,11 +123,7 @@ class GroupedDecileRuns:
         eligible = runner.universes[universe]
         if group_labels is not None:
             eligible = eligible & (group_labels == group)
-        ends = runner.formation_dates[formation_months:]
-        starts = runner.formation_dates[: len(ends)]
-        window = runner.matrices.window_returns(starts, ends)
-        window.index = runner.months[formation_months:]
-        window = window.reindex(runner.months)
+        window = runner.past_returns(formation_months, skip)
         deciles = DecileRanker().rank(window, eligible)
         self.last_deciles = deciles
         portfolio = CohortPortfolio(runner.monthly_returns, None)

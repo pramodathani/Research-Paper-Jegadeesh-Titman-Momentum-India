@@ -7,6 +7,9 @@ from pathlib import Path
 import pandas as pd
 import psycopg
 
+from jegadeesh_titman_momentum_india.momentum.study_period import (
+    StudyPeriod,
+)
 from jegadeesh_titman_momentum_india.data.timescale_store import (
     TimescaleStore,
 )
@@ -33,6 +36,11 @@ class BuildReturnsApplication:
         parser.add_argument(
             '--symbol-changes',
             default='data/nse/symbol_changes/symbolchange.csv',
+        )
+        parser.add_argument(
+            '--through-month',
+            default=None,
+            help='last month to use, YYYY-MM; default: the last complete month',
         )
         arguments = parser.parse_args()
         schema = TimescaleStore.SCHEMA
@@ -68,7 +76,9 @@ class BuildReturnsApplication:
         returns, flags = DailyReturnBuilder().build(prices, actions)
         folder = Path(arguments.out_folder)
         folder.mkdir(parents=True, exist_ok=True)
-        returns.to_parquet(folder / 'daily_returns.parquet')
+        kept = StudyPeriod.cut(returns, arguments.through_month)
+        print(f'study data run to {kept["date"].max():%Y-%m-%d}')
+        kept.to_parquet(folder / 'daily_returns.parquet')
         flags.to_parquet(folder / 'return_flags.parquet')
         print(f'{len(returns)} daily returns, {len(flags)} flagged days')
         if arguments.skip_database:
