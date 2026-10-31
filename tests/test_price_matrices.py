@@ -113,3 +113,14 @@ class TestPriceMatrices:
         frame.loc[frame.index.month == 2, 'BBB'] = float('nan')
         monthly = MonthlyReturns().build(frame)
         assert pd.isna(monthly.loc[pd.Period('2010-02'), 'BBB'])
+
+    def test_delay_shifts_each_month_by_trading_days(self) -> None:
+        """With a one-day delay the first day of February belongs to January.
+
+        Returns:
+            None.
+        """
+        matrices = PriceMatrices(make_daily())
+        monthly = MonthlyReturns().build(matrices.returns, delay_days=1)
+        january = monthly.loc[pd.Period('2010-01'), 'AAA']
+        assert january == pytest.approx(1.10 * 1.10 - 1.0)

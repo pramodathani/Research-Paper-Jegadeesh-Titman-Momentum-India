@@ -52,6 +52,7 @@ class StudyRunner:
         daily_returns: pd.DataFrame,
         skip_days: int = 5,
         brokerage: float = 0.0,
+        delay_days: int = 0,
     ) -> None:
         """Builds the tables the strategies need.
 
@@ -60,6 +61,8 @@ class StudyRunner:
                 traded_value and ret.
             skip_days (int): Trading days skipped in the skip variant.
             brokerage (float): Brokerage per side, as a fraction.
+            delay_days (int): Trading days by which every purchase and sale is
+                delayed after the formation close.
 
         Returns:
             None.
@@ -67,7 +70,10 @@ class StudyRunner:
         self.matrices = PriceMatrices(daily_returns)
         self.skip_days = skip_days
         self.brokerage = brokerage
-        self.monthly_returns = MonthlyReturns().build(self.matrices.returns)
+        self.monthly_returns = MonthlyReturns().build(
+            self.matrices.returns,
+            delay_days,
+        )
         self.formation_dates = self.matrices.month_end_dates()
         self.months = pd.PeriodIndex(self.formation_dates, freq='M')
         builder = UniverseBuilder(self.matrices)
