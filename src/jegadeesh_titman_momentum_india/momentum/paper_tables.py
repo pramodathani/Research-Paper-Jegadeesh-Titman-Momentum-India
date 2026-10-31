@@ -107,16 +107,16 @@ class PaperTables:
         rows.append(row)
         return pd.DataFrame(rows)
 
-    def table_three(self) -> pd.DataFrame:
-        """Deciles within size and beta terciles of the all-shares universe.
+    def group_parts(self) -> dict[str, tuple]:
+        """Names the groups of the all-shares universe used in Table III.
 
         Returns:
-            pd.DataFrame: One row per group and decile, with the average
-                gross return, plain t and the alpha and its t.
+            dict[str, tuple]: For each group name, the label table and the
+                group number, or None and None for everyone.
         """
         size = self.groups.size_groups()
         beta = self.groups.beta_groups()
-        parts = {
+        return {
             'All': (None, None),
             'S1 (small)': (size, 1),
             'S2': (size, 2),
@@ -125,9 +125,31 @@ class PaperTables:
             'B2': (beta, 2),
             'B3 (high beta)': (beta, 3),
         }
+
+    def decile_frames(self) -> dict[str, pd.DataFrame]:
+        """Runs all ten deciles, gross, for every group.
+
+        Returns:
+            dict[str, pd.DataFrame]: For each group, a table with one column
+                per decile 1 to 10 and the spread 10-1.
+        """
+        if not hasattr(self, '_frames'):
+            self._frames = {}
+            for name, (labels, group) in self.group_parts().items():
+                self._frames[name] = self.groups.decile_returns(
+                    labels, group, 6, 6
+                )
+        return self._frames
+
+    def table_three(self) -> pd.DataFrame:
+        """Deciles within size and beta terciles of the all-shares universe.
+
+        Returns:
+            pd.DataFrame: One row per group and decile, with the average
+                gross return, plain t and the alpha and its t.
+        """
         rows = []
-        for name, (labels, group) in parts.items():
-            table = self.groups.decile_returns(labels, group, 6, 6)
+        for name, table in self.decile_frames().items():
             for column in list(range(1, 11)) + ['10-1']:
                 row = self._score(table[column].rename(str(column)))
                 row['group'] = name
