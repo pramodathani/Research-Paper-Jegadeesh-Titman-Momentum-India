@@ -121,11 +121,13 @@ class DailyReturnBuilder:
         Returns:
             pd.DataFrame: One row per symbol and date, EQ before BE before BZ.
         """
-        keep = [
+        pairs = prices[['symbol', 'isin']].drop_duplicates().copy()
+        pairs['keep'] = [
             self.security_filter.is_company_share(symbol, isin)
-            for symbol, isin in zip(prices['symbol'], prices['isin'])
+            for symbol, isin in zip(pairs['symbol'], pairs['isin'])
         ]
-        table = prices[keep].copy()
+        table = prices.merge(pairs, on=['symbol', 'isin'], how='left')
+        table = table[table['keep']].drop(columns=['keep']).copy()
         table['priority'] = table['series'].map(self.SERIES_PRIORITY)
         table = table.sort_values(['symbol', 'date', 'priority'])
         table = table.drop_duplicates(subset=['symbol', 'date'], keep='first')
