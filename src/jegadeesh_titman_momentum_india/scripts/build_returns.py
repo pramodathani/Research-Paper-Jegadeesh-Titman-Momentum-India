@@ -13,6 +13,9 @@ from jegadeesh_titman_momentum_india.data.timescale_store import (
 from jegadeesh_titman_momentum_india.momentum.daily_return_builder import (
     DailyReturnBuilder,
 )
+from jegadeesh_titman_momentum_india.momentum.symbol_changes import (
+    SymbolChanges,
+)
 
 
 class BuildReturnsApplication:
@@ -27,6 +30,10 @@ class BuildReturnsApplication:
         parser = argparse.ArgumentParser()
         parser.add_argument('--out-folder', default='data/derived')
         parser.add_argument('--skip-database', action='store_true')
+        parser.add_argument(
+            '--symbol-changes',
+            default='data/nse/symbol_changes/symbolchange.csv',
+        )
         arguments = parser.parse_args()
         schema = TimescaleStore.SCHEMA
         connection = psycopg.connect(
@@ -55,6 +62,9 @@ class BuildReturnsApplication:
             ).fetchall(),
             columns=['ex_date', 'symbol', 'subject', 'face_value'],
         )
+        changes = SymbolChanges.from_nse_file(arguments.symbol_changes)
+        prices = changes.apply(prices, 'date')
+        actions = changes.apply(actions, 'ex_date')
         returns, flags = DailyReturnBuilder().build(prices, actions)
         folder = Path(arguments.out_folder)
         folder.mkdir(parents=True, exist_ok=True)

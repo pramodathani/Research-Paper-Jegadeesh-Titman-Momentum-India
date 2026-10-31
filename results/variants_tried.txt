@@ -1,0 +1,1 @@
+Core grid: 192 series (2 universes x 2 skip settings x 4 J x 4 K x 3 legs). Robustness: 2 delisting stresses + brokerage + one-day delay on 4 J/K pairs x 2 universes x 3 legs = 96. Portfolios C and D: 4 J/K pairs each, 2 portfolios = 8. Table II, III, VII and benchmark comparisons reuse the 6/6 strategy.
