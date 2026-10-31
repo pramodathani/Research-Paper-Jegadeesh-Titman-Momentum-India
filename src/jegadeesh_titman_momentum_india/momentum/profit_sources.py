@@ -163,8 +163,13 @@ class ProfitSources:
             if len(rows) < 6:
                 continue
             panel = values[rows]
+            first = rows[0] - self.horizon
             mask = np.vstack(
-                [np.ones(panel.shape[1], dtype=bool)]
+                [
+                    eligible[first]
+                    if first >= 0
+                    else np.ones(panel.shape[1], dtype=bool)
+                ]
                 + [eligible[rows[k - 1]] for k in range(1, len(rows))]
             )
             panel = np.where(mask, panel, np.nan)

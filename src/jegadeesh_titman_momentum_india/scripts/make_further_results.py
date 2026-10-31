@@ -130,7 +130,26 @@ class MakeFurtherResultsApplication:
                     lead_lags.append(part)
             result = sources.decomposition()
             result['universe'] = universe
+            result['note'] = 'as built'
             decompositions.append(result)
+            if universe == 'U1':
+                period = sources.compounded(ending=True)
+                extreme = period.columns[(period > 10).any()]
+                trimmed = ProfitSources(
+                    self.runner.monthly_returns.loc[start:].drop(
+                        columns=extreme
+                    ),
+                    self.runner.universes[universe].loc[start:].drop(
+                        columns=extreme
+                    ),
+                    past.loc[start:].drop(columns=extreme),
+                ).decomposition()
+                trimmed['universe'] = universe
+                trimmed['note'] = (
+                    'shares with a six-month return above +1000% dropped: '
+                    + ', '.join(map(str, extreme))
+                )
+                decompositions.append(trimmed)
         pd.DataFrame(summaries).to_csv(
             self.out / 'section3_profit_summary.csv', index=False
         )
