@@ -208,6 +208,23 @@ class SiteSnapshot:
                 pd.read_csv(folder / 'long_only_vs_benchmarks.csv')
             ),
         }
+        further = folder / 'further'
+        names = (
+            'january_reversal',
+            'section3_profit_summary',
+            'section3_decomposition',
+            'section3_lead_lag',
+            'table3_joint_tests',
+            'table4_by_size_ftests',
+            'flat_cost_test',
+            'alpha_by_market_weighting',
+            'buy_and_hold_vs_rebalanced',
+        )
+        tables['further'] = {
+            name: self._records(pd.read_csv(further / f'{name}.csv'))
+            for name in names
+            if (further / f'{name}.csv').exists()
+        }
         return tables
 
     def build(self) -> dict[str, Any]:

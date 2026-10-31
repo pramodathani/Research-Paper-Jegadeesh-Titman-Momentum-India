@@ -648,6 +648,73 @@ function renderRobustness() {
   document.getElementById('table-robustness').innerHTML = `${html}</tbody>`;
 }
 
+function renderFurther() {
+  const further = snapshot.tables.further;
+  if (!further) {
+    return;
+  }
+  const name = { U1: 'All shares', U2: 'Top 500' };
+  const pct = (value, places = 2) => (Number.isFinite(value) ? (value * 100).toFixed(places) : '');
+  const num = (value, places = 2) => (Number.isFinite(value) ? value.toFixed(places) : '');
+  const pv = (value) => (value < 0.001 ? '<0.001' : value.toFixed(3));
+  const fill = (id, html) => {
+    document.getElementById(id).innerHTML = html;
+  };
+
+  let html = '<thead><tr><th>Universe</th><th>J/K</th><th>Normal, % a month</th><th>Reversed, % a month</th><th>Normal, % a year</th><th>Reversed, % a year</th><th>Average January spread, %</th><th>Reversal loses / gains</th><th><i>t</i></th></tr></thead><tbody>';
+  further.january_reversal.forEach((r) => {
+    html += `<tr><th>${name[r.universe]}</th><td>${r.formation_months}/${r.holding_months}</td><td>${pct(r.normal_mean)}</td><td>${pct(r.reversed_mean)}</td><td>${pct(r.normal_compound_annual, 1)}</td><td>${pct(r.reversed_compound_annual, 1)}</td><td>${pct(r.average_january_spread)}</td><td>${r.januaries_where_reversal_loses} / ${r.januaries_where_reversal_gains}</td><td>${num(r.january_reversal_t)}</td></tr>`;
+  });
+  fill('table-january', `${html}</tbody>`);
+
+  html = '<thead><tr><th>Panel A</th><th>Universe</th><th>Mean, % a month</th><th>NW <i>t</i></th><th>Correlation</th></tr></thead><tbody>';
+  further.section3_profit_summary.forEach((r) => {
+    html += `<tr><th>${r.series}</th><td>${name[r.universe]}</td><td>${pct(r.mean)}</td><td>${num(r.t_newey_west)}</td><td>${num(r.correlation_with_other)}</td></tr>`;
+  });
+  html += '</tbody><thead><tr><th>Panel B</th><th>Universe</th><th>Total</th><th>Dispersion</th><th>Factor</th><th>Idiosyncratic</th></tr></thead><tbody>';
+  further.section3_decomposition.forEach((r) => {
+    const trimmed = String(r.note).startsWith('shares');
+    html += `<tr><th>${trimmed ? 'Extreme shares dropped' : 'As built'}</th><td>${name[r.universe]}</td><td>${(r.total * 100).toFixed(2)}</td><td>${(r.dispersion * 100).toFixed(2)}</td><td>${(r.factor * 100).toFixed(2)}</td><td>${(r.idiosyncratic * 100).toFixed(2)}</td></tr>`;
+  });
+  html += '</tbody><thead><tr><th>Panel C</th><th>Universe</th><th>Sample</th><th>&theta;</th><th><i>t</i></th></tr></thead><tbody>';
+  further.section3_lead_lag.forEach((r) => {
+    html += `<tr><th>${r.series}</th><td>${name[r.universe]}</td><td>${r.sample}</td><td>${num(r.theta)}</td><td>${num(r.t)}</td></tr>`;
+  });
+  fill('table-section3', `${html}</tbody>`);
+
+  html = '<thead><tr><th>J/K</th><th>All shares, % a month</th><th>All shares, alpha a year (<i>t</i>)</th><th>Top 500, % a month</th><th>Top 500, alpha a year (<i>t</i>)</th></tr></thead><tbody>';
+  const flat = further.flat_cost_test;
+  flat.filter((r) => r.universe === 'U1').forEach((a) => {
+    const b = flat.find((r) => r.universe === 'U2' && r.formation_months === a.formation_months && r.holding_months === a.holding_months);
+    html += `<tr><th>${a.formation_months}/${a.holding_months}</th><td>${pct(a.after_half_percent_mean)}</td>${cell(a.after_half_percent_alpha_annual, a.after_half_percent_alpha_t)}<td>${pct(b.after_half_percent_mean)}</td>${cell(b.after_half_percent_alpha_annual, b.after_half_percent_alpha_t)}</tr>`;
+  });
+  fill('table-flat', `${html}</tbody>`);
+
+  html = '<thead><tr><th>Universe</th><th>Portfolio</th><th>Market</th><th>Alpha, % a month</th><th>Beta</th></tr></thead><tbody>';
+  further.alpha_by_market_weighting.forEach((r) => {
+    html += `<tr><th>${name[r.universe]}</th><td>${r.portfolio.replace('_', '-')}</td><td>${r.market}</td>${cell(r.alpha, r.alpha_t)}<td>${num(r.beta)}</td></tr>`;
+  });
+  fill('table-alpha', `${html}</tbody>`);
+
+  html = '<thead><tr><th>J/K</th><th>All shares, held</th><th>All shares, rebalanced</th><th>Top 500, held</th><th>Top 500, rebalanced</th></tr></thead><tbody>';
+  const hold = further.buy_and_hold_vs_rebalanced;
+  hold.filter((r) => r.universe === 'U1').forEach((a) => {
+    const b = hold.find((r) => r.universe === 'U2' && r.formation_months === a.formation_months && r.holding_months === a.holding_months);
+    html += `<tr><th>${a.formation_months}/${a.holding_months}</th>${cell(a.buy_and_hold_mean, a.buy_and_hold_nw_t)}<td>${pct(a.rebalanced_mean)}</td>${cell(b.buy_and_hold_mean, b.buy_and_hold_nw_t)}<td>${pct(b.rebalanced_mean)}</td></tr>`;
+  });
+  fill('table-hold', `${html}</tbody>`);
+
+  html = '<thead><tr><th>Group</th><th>Equal returns, F (<i>p</i>)</th><th>Zero alphas, F (<i>p</i>)</th></tr></thead><tbody>';
+  further.table3_joint_tests.forEach((r) => {
+    html += `<tr><th>${r.group}</th><td>${num(r.equal_returns_f)} (${pv(r.equal_returns_p)})</td><td>${num(r.zero_alphas_f)} (${pv(r.zero_alphas_p)})</td></tr>`;
+  });
+  html += '</tbody><thead><tr><th>Size group</th><th>All months, F (<i>p</i>)</th><th>February to December, F (<i>p</i>)</th></tr></thead><tbody>';
+  further.table4_by_size_ftests.forEach((r) => {
+    html += `<tr><th>${r.group}</th><td>${num(r.all_months_f)} (${pv(r.all_months_p)})</td><td>${num(r.feb_dec_f)} (${pv(r.feb_dec_p)})</td></tr>`;
+  });
+  fill('table-joint', `${html}</tbody>`);
+}
+
 function update() {
   syncControls();
   writeHash();
@@ -673,6 +740,7 @@ async function start() {
   renderEvent();
   renderTradeable();
   renderRobustness();
+  renderFurther();
   update();
   window.addEventListener('resize', () => Object.values(charts).forEach((item) => item.resize()));
 }
